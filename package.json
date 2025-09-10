@@ -3,20 +3,35 @@
   "version": "1.0.0-0",
   "type": "module",
   "description": "Vue-specific UI component library consumes the bedrock-web-optical-scanner for all scanning logic, provides reusable Vue components for optical scanning UIs, replaces the combined scanning+UI approach in existing libraries",
-  "exports": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./components/": "./components/"
+  },
   "files": [
-    "lib/**/*.js"
+    "components/*",
+    "lib/*"
   ],
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint --ext .cjs,.js,.vue ."
   },
   "dependencies": {
+    "barcode-detector": "^3.0.5",
+    "dynamsoft-javascript-barcode": "=9.6.1"
+  },
+  "peerDependencies": {
+    "@bedrock/quasar": "^10.0.0",
+    "@bedrock/web-fontawesome": "^2.0.0",
+    "vue": "^3.4.21"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
     "eslint-config-digitalbazaar": "^5.2.0",
     "eslint-plugin-jsdoc": "^51.4.1",
-    "eslint-plugin-unicorn": "^56.0.1"
+    "eslint-plugin-unicorn": "^56.0.1",
+    "eslint-plugin-quasar": "^1.1.0",
+    "eslint-plugin-vue": "^9.23.0",
+    "jsdoc": "^4.0.2",
+    "jsdoc-to-markdown": "^9.0.2"
   },
   "engines": {
     "node": ">=20"
@@ -27,7 +42,8 @@
   },
   "keywords": [
     "bedrock",
-    "vue"
+    "vue components",
+    "optical barcode scanner"
   ],
   "author": {
     "name": "Digital Bazaar, Inc.",
