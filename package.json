@@ -15,8 +15,7 @@
     "lint": "eslint --ext .cjs,.js,.vue ."
   },
   "dependencies": {
-    "barcode-detector": "^3.0.5",
-    "dynamsoft-javascript-barcode": "=9.6.1"
+    "@bedrock/web-optical-scanner": "file:../bedrock-web-optical-scanner"
   },
   "peerDependencies": {
     "@bedrock/quasar": "^10.0.0",
@@ -30,6 +29,7 @@
     "eslint-plugin-unicorn": "^56.0.1",
     "eslint-plugin-quasar": "^1.1.0",
     "eslint-plugin-vue": "^9.23.0",
+    "vue": "^3.4.21",
     "jsdoc": "^4.0.2",
     "jsdoc-to-markdown": "^9.0.2"
   },
@@ -42,8 +42,13 @@
   },
   "keywords": [
     "bedrock",
-    "vue components",
-    "optical barcode scanner"
+    "vue",
+    "optical",
+    "scanner",
+    "barcode",
+    "qr",
+    "pdf417",
+    "mrz"
   ],
   "author": {
     "name": "Digital Bazaar, Inc.",

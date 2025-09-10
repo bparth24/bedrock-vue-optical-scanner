@@ -1,8 +1,8 @@
-/*
- * Copyright (c) 2022 Digital Bazaar, Inc. All rights reserved.
+/*!
+ * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import * as bedrock from '@bedrock/core';
-import '@bedrock/test';
-import '@bedrock/karma';
+import {runTests} from '@bedrock/test';
 
-bedrock.start();
+runTests({
+  module: '@bedrock/vue-optical-scanner'
+});

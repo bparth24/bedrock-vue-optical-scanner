@@ -1,9 +1,11 @@
 {
-  "name": "bedrock-vue-optical-scanner",
+  "name": "bedrock-vue-optical-scanner-test",
   "version": "0.0.1-0",
   "type": "module",
   "private": true,
   "scripts": {
+    "lint": "eslint .",
+    "start": "node --preserve-symlinks dev.js",
     "test": "node --preserve-symlinks test.js test --framework karma",
     "test-karma": "node --preserve-symlinks test.js test --framework karma",
     "debug": "node --preserve-symlinks test.js test --framework karma --log-level debug",
@@ -12,8 +14,18 @@
   },
   "dependencies": {
     "@bedrock/core": "^6.0.1",
-    "@bedrock/karma": "^6.1.0",
+    "@bedrock/express": "^8.2.0",
+    "@bedrock/karma": "^7.0.1",
+    "@bedrock/quasar": "^10.0.0",
+    "@bedrock/server": "^5.0.0",
     "@bedrock/test": "^8.0.5",
-    "events": "^3.3.0"
+    "@bedrock/views": "^11.0.0",
+    "@bedrock/vue": "^5.0.1",
+    "@bedrock/vue-optical-scanner": "file:..",
+    "@bedrock/web": "^3.0.0",
+    "@bedrock/web-fontawesome": "^2.0.0",
+    "@bedrock/webpack": "^9.0.3",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
   }
 }
