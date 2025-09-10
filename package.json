@@ -1,8 +1,8 @@
 {
-  "name": "@bedrock/web-pouch-edv",
-  "version": "8.2.1-0",
+  "name": "@bedrock/vue-optical-scanner",
+  "version": "1.0.0-0",
   "type": "module",
-  "description": "PouchDB EDV Storage",
+  "description": "Vue-specific UI component library consumes the bedrock-web-optical-scanner for all scanning logic, provides reusable Vue components for optical scanning UIs, replaces the combined scanning+UI approach in existing libraries",
   "exports": "./lib/index.js",
   "files": [
     "lib/**/*.js"
@@ -11,33 +11,23 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@digitalbazaar/ecdsa-multikey": "^1.8.0",
-    "@digitalbazaar/edv-client": "^16.1.0",
-    "base58-universal": "^2.0.0",
-    "pouchdb": "^9.0.0",
-    "pouchdb-adapter-indexeddb": "^9.0.0",
-    "pouchdb-find": "^9.0.0"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
     "eslint-config-digitalbazaar": "^5.2.0",
     "eslint-plugin-jsdoc": "^51.4.1",
-    "eslint-plugin-unicorn": "^56.0.1",
-    "pouchdb-debug": "^7.2.1"
+    "eslint-plugin-unicorn": "^56.0.1"
   },
   "engines": {
     "node": ">=20"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/digitalbazaar/bedrock-web-pouch-edv"
+    "url": "https://github.com/digitalbazaar/bedrock-vue-optical-scanner"
   },
   "keywords": [
     "bedrock",
-    "pouchdb",
-    "edv",
-    "encrypted data vault",
-    "web"
+    "vue"
   ],
   "author": {
     "name": "Digital Bazaar, Inc.",
@@ -45,7 +35,7 @@
     "url": "https://digitalbazaar.com"
   },
   "bugs": {
-    "url": "https://github.com/digitalbazaar/bedrock-pouch-edv/issues"
+    "url": "https://github.com/digitalbazaar/bedrock-vue-optical-scanner/issues"
   },
-  "homepage": "https://github.com/digitalbazaar/bedrock-pouch-edv"
+  "homepage": "https://github.com/digitalbazaar/bedrock-vue-optical-scanner"
 }

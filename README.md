@@ -1,1 +1,1 @@
-# bedrock-web-pouch-edv
+# bedrock-vue-optical-scanner
