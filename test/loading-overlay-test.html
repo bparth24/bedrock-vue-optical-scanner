@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading Overlay Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .demo-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .mock-camera-container {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      background: linear-gradient(45deg, #2196f3 0%, #21cbf3 100%);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      text-align: center;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    button.active {
+      background: #28a745;
+    }
+    
+    button.danger {
+      background: #dc3545;
+    }
+    
+    .control-group {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+    
+    .control-group h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    
+    label {
+      display: block;
+      margin: 8px 0 4px 0;
+      font-weight: 500;
+    }
+    
+    select, input[type="text"] {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      width: 100%;
+      max-width: 200px;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 600px;
+    }
+    
+    .test-scenarios {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+    
+    .scenario-button {
+      margin: 5px;
+      padding: 10px 15px;
+      background: #2196f3;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    
+    .scenario-button:hover {
+      background: #1976d2;
+    }
+    
+    @media (max-width: 768px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .controls {
+        flex-direction: column;
+      }
+      
+      button, .scenario-button {
+        width: 100%;
+        margin: 2px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <div class="demo-area">
+        <h1>LoadingOverlayComponent Test</h1>
+        
+        <!-- Mock Camera Container with Loading Overlay -->
+        <div class="mock-camera-container">
+          📷 Mock Camera/Scanner View<br>
+          <small>Loading overlays will appear here</small>
+          
+          <!-- Loading Overlay Component -->
+          <loading-overlay-component
+            ref="loadingOverlay"
+            :loading-camera="loadingCamera"
+            :scanning="scanning"
+            :loading-text="loadingText"
+            :scanning-text="scanningText"
+            :spinner-type="spinnerType"
+            :overlay-background="overlayBackground"
+            :size="size"
+            :position="position">
+            
+            <!-- Custom Spinner Slots (when useCustomSpinners is true) -->
+            <template v-if="useCustomSpinners" #cameraSpinner>
+              <div style="padding: 20px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                🔄 Custom Camera Spinner
+              </div>
+            </template>
+            
+            <template v-if="useCustomSpinners" #scannerSpinner>
+              <div style="padding: 20px; background: rgba(0,255,0,0.2); border-radius: 8px;">
+                📡 Custom Scanner Spinner
+              </div>
+            </template>
+            
+            <template v-if="useCustomSpinners && showCustomContent" #loadingContent>
+              <div style="padding: 30px; background: rgba(255,0,255,0.2); border-radius: 8px; color: white;">
+                🎯 Custom Loading Content
+              </div>
+            </template>
+          </loading-overlay-component>
+        </div>
+        
+        <!-- State Controls -->
+        <div class="control-group">
+          <h4>Loading States</h4>
+          <div class="controls">
+            <button 
+              :class="{ active: loadingCamera }"
+              @click="loadingCamera = !loadingCamera">
+              {{ loadingCamera ? 'Stop' : 'Start' }} Camera Loading
+            </button>
+            <button 
+              :class="{ active: scanning }"
+              @click="scanning = !scanning">
+              {{ scanning ? 'Stop' : 'Start' }} Scanning
+            </button>
+            <button 
+              class="danger"
+              @click="clearAllStates">
+              Clear All States
+            </button>
+          </div>
+        </div>
+        
+        <!-- Configuration Controls -->
+        <div class="control-group">
+          <h4>Appearance Settings</h4>
+          
+          <label>
+            Spinner Type:
+            <select v-model="spinnerType">
+              <option value="default">Default (Rings)</option>
+              <option value="pulse">Pulse</option>
+              <option value="dots">Dots</option>
+              <option value="minimal">Minimal</option>
+            </select>
+          </label>
+          
+          <label>
+            Background:
+            <select v-model="overlayBackground">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="transparent">Transparent</option>
+            </select>
+          </label>
+          
+          <label>
+            Size:
+            <select v-model="size">
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </label>
+          
+          <label>
+            Position:
+            <select v-model="position">
+              <option value="center">Center</option>
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </label>
+        </div>
+        
+        <!-- Text Customization -->
+        <div class="control-group">
+          <h4>Text Settings</h4>
+          
+          <label>
+            Loading Text:
+            <input v-model="loadingText" type="text" placeholder="Loading Camera...">
+          </label>
+          
+          <label>
+            Scanning Text:
+            <input v-model="scanningText" type="text" placeholder="Scanning...">
+          </label>
+        </div>
+        
+        <!-- Custom Slots -->
+        <div class="control-group">
+          <h4>Custom Slots</h4>
+          
+          <div class="controls">
+            <button 
+              :class="{ active: useCustomSpinners }"
+              @click="useCustomSpinners = !useCustomSpinners">
+              {{ useCustomSpinners ? 'Disable' : 'Enable' }} Custom Spinners
+            </button>
+            <button 
+              :class="{ active: showCustomContent }"
+              @click="showCustomContent = !showCustomContent">
+              {{ showCustomContent ? 'Hide' : 'Show' }} Custom Content
+            </button>
+          </div>
+        </div>
+        
+        <!-- Test Scenarios -->
+        <div class="test-scenarios">
+          <h4>🧪 Test Scenarios</h4>
+          <button class="scenario-button" @click="runCameraInitScenario">
+            Camera Initialization
+          </button>
+          <button class="scenario-button" @click="runScanningScenario">
+            Scanning Process
+          </button>
+          <button class="scenario-button" @click="runErrorRecoveryScenario">
+            Error Recovery
+          </button>
+          <button class="scenario-button" @click="runCustomStylingScenario">
+            Custom Styling
+          </button>
+        </div>
+      </div>
+      
+      <!-- State Display -->
+      <div class="state-display">
+        <h3>Component State:</h3>
+        <pre>{{ JSON.stringify({
+          loadingCamera,
+          scanning,
+          loadingText,
+          scanningText,
+          spinnerType,
+          overlayBackground,
+          size,
+          position,
+          useCustomSpinners,
+          showCustomContent
+        }, null, 2) }}</pre>
+        
+        <h4>Event Log (last 10):</h4>
+        <div v-for="(event, index) in eventLog.slice(-10)" :key="index" style="margin: 5px 0; padding: 5px; background: rgba(0,0,0,0.05); border-radius: 3px;">
+          <strong>{{ event.timestamp }}:</strong> {{ event.type }}<br>
+          <small>{{ event.message }}</small>
+        </div>
+        
+        <h4>Production Use Cases:</h4>
+        <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 3px; margin: 10px 0;">
+          <strong>✅ Camera Loading:</strong> When user grants camera permission<br>
+          <strong>✅ PDF417 Scanning:</strong> When processing driver license<br>
+          <strong>✅ QR Code Scanning:</strong> When detecting QR codes<br>
+          <strong>✅ File Upload:</strong> When processing uploaded images<br>
+          <strong>✅ Error States:</strong> When camera fails or scanning errors
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock LoadingOverlayComponent
+    const LoadingOverlayComponent = {
+      name: 'LoadingOverlayComponent',
+      template: `
+        <div
+          v-if="showOverlay"
+          class="loading-overlay-container"
+          :class="overlayClasses">
+          
+          <!-- Camera Loading State -->
+          <div
+            v-if="loadingCamera"
+            class="loading-state camera-loading">
+            
+            <!-- Custom Camera Spinner Slot -->
+            <div class="spinner-container">
+              <slot name="cameraSpinner">
+                <div class="default-spinner" :class="spinnerClasses">
+                  <div class="spinner-ring"></div>
+                  <div class="spinner-ring"></div>
+                  <div class="spinner-ring"></div>
+                </div>
+              </slot>
+            </div>
+            
+            <!-- Loading Text -->
+            <div class="loading-text camera-text">
+              {{ loadingText }}
+            </div>
+          </div>
+          
+          <!-- Scanning State -->
+          <div
+            v-if="scanning && !loadingCamera"
+            class="loading-state scanning-loading">
+            
+            <!-- Custom Scanner Spinner Slot -->
+            <div class="spinner-container">
+              <slot name="scannerSpinner">
+                <div class="default-spinner" :class="spinnerClasses">
+                  <div class="spinner-pulse"></div>
+                </div>
+              </slot>
+            </div>
+            
+            <!-- Scanning Text -->
+            <div class="loading-text scanning-text">
+              {{ scanningText }}
+            </div>
+          </div>
+          
+          <!-- Custom Content Slot -->
+          <slot
+            v-if="!loadingCamera && !scanning"
+            name="loadingContent">
+          </slot>
+        </div>
+      `,
+      props: {
+        loadingCamera: { type: Boolean, default: false },
+        scanning: { type: Boolean, default: false },
+        loadingText: { type: String, default: 'Loading Camera...' },
+        scanningText: { type: String, default: 'Scanning...' },
+        spinnerType: { type: String, default: 'default' },
+        overlayBackground: { type: String, default: 'dark' },
+        size: { type: String, default: 'medium' },
+        position: { type: String, default: 'center' }
+      },
+      computed: {
+        showOverlay() {
+          return this.loadingCamera || this.scanning || this.$slots.loadingContent;
+        },
+        overlayClasses() {
+          return [
+            `overlay-bg-${this.overlayBackground}`,
+            `overlay-pos-${this.position}`,
+            `overlay-size-${this.size}`
+          ];
+        },
+        spinnerClasses() {
+          return [
+            `spinner-type-${this.spinnerType}`,
+            `spinner-size-${this.size}`
+          ];
+        }
+      }
+    };
+
+    // Vue App
+    const { createApp } = Vue;
+    
+    createApp({
+      components: {
+        LoadingOverlayComponent
+      },
+      data() {
+        return {
+          // Component props
+          loadingCamera: false,
+          scanning: false,
+          loadingText: 'Loading Camera...',
+          scanningText: 'Scanning...',
+          spinnerType: 'default',
+          overlayBackground: 'dark',
+          size: 'medium',
+          position: 'center',
+          
+          // Custom slot controls
+          useCustomSpinners: false,
+          showCustomContent: false,
+          
+          // Event tracking
+          eventLog: []
+        };
+      },
+      methods: {
+        // State management
+        clearAllStates() {
+          this.loadingCamera = false;
+          this.scanning = false;
+          this.showCustomContent = false;
+          this.addEvent('clear-all-states', 'All loading states cleared');
+        },
+        
+        // Test scenarios
+        async runCameraInitScenario() {
+          this.addEvent('scenario-start', 'Camera initialization scenario started');
+          this.clearAllStates();
+          
+          this.loadingText = 'Initializing Camera...';
+          this.loadingCamera = true;
+          
+          setTimeout(() => {
+            this.loadingText = 'Connecting to Camera...';
+          }, 1000);
+          
+          setTimeout(() => {
+            this.loadingText = 'Camera Ready!';
+          }, 2000);
+          
+          setTimeout(() => {
+            this.loadingCamera = false;
+            this.addEvent('scenario-end', 'Camera initialization completed');
+          }, 2500);
+        },
+        
+        async runScanningScenario() {
+          this.addEvent('scenario-start', 'Scanning process scenario started');
+          this.clearAllStates();
+          
+          this.scanningText = 'Looking for codes...';
+          this.scanning = true;
+          
+          setTimeout(() => {
+            this.scanningText = 'Processing PDF417...';
+          }, 1500);
+          
+          setTimeout(() => {
+            this.scanningText = 'Parsing License Data...';
+          }, 3000);
+          
+          setTimeout(() => {
+            this.scanning = false;
+            this.addEvent('scenario-end', 'Scanning process completed');
+          }, 4000);
+        },
+        
+        async runErrorRecoveryScenario() {
+          this.addEvent('scenario-start', 'Error recovery scenario started');
+          this.clearAllStates();
+          
+          // Simulate camera error
+          this.loadingText = 'Camera Error - Retrying...';
+          this.overlayBackground = 'light';
+          this.loadingCamera = true;
+          
+          setTimeout(() => {
+            this.loadingText = 'Trying Different Camera...';
+          }, 1500);
+          
+          setTimeout(() => {
+            this.loadingText = 'Camera Connected!';
+            this.overlayBackground = 'dark';
+          }, 3000);
+          
+          setTimeout(() => {
+            this.loadingCamera = false;
+            this.addEvent('scenario-end', 'Error recovery completed');
+          }, 3500);
+        },
+        
+        async runCustomStylingScenario() {
+          this.addEvent('scenario-start', 'Custom styling scenario started');
+          this.clearAllStates();
+          
+          // Cycle through different styles
+          const styles = [
+            { type: 'pulse', bg: 'dark', size: 'large', pos: 'center' },
+            { type: 'dots', bg: 'light', size: 'medium', pos: 'top' },
+            { type: 'minimal', bg: 'transparent', size: 'small', pos: 'bottom' },
+            { type: 'default', bg: 'dark', size: 'medium', pos: 'center' }
+          ];
+          
+          this.loadingCamera = true;
+          this.useCustomSpinners = true;
+          
+          for (let i = 0; i < styles.length; i++) {
+            const style = styles[i];
+            setTimeout(() => {
+              this.spinnerType = style.type;
+              this.overlayBackground = style.bg;
+              this.size = style.size;
+              this.position = style.pos;
+              this.loadingText = `Style: ${style.type} - ${style.size}`;
+            }, i * 1000);
+          }
+          
+          setTimeout(() => {
+            this.loadingCamera = false;
+            this.useCustomSpinners = false;
+            this.addEvent('scenario-end', 'Custom styling completed');
+          }, styles.length * 1000);
+        },
+        
+        // Event logging
+        addEvent(type, message) {
+          this.eventLog.push({
+            timestamp: new Date().toLocaleTimeString(),
+            type,
+            message
+          });
+          
+          // Keep only last 20 events
+          if(this.eventLog.length > 20) {
+            this.eventLog = this.eventLog.slice(-20);
+          }
+        }
+      }
+    }).mount('#app');
+  </script>
+
+  <!-- Component Styles -->
+  <style>
+  /* Loading Overlay Styles */
+  .loading-overlay-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .overlay-bg-dark { background: rgba(0, 0, 0, 0.7); }
+  .overlay-bg-light { background: rgba(255, 255, 255, 0.9); }
+  .overlay-bg-transparent { background: transparent; }
+
+  .overlay-pos-center { align-items: center; justify-content: center; }
+  .overlay-pos-top { align-items: flex-start; justify-content: center; padding-top: 20%; }
+  .overlay-pos-bottom { align-items: flex-end; justify-content: center; padding-bottom: 20%; }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 300px;
+    padding: 20px;
+  }
+
+  .spinner-container {
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .default-spinner {
+    position: relative;
+    display: inline-block;
+  }
+
+  .spinner-size-small { width: 24px; height: 24px; }
+  .spinner-size-medium { width: 40px; height: 40px; }
+  .spinner-size-large { width: 56px; height: 56px; }
+
+  .spinner-type-default .spinner-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    animation: spin 1.2s linear infinite;
+  }
+
+  .spinner-type-default .spinner-ring:nth-child(1) { animation-delay: 0s; }
+  .spinner-type-default .spinner-ring:nth-child(2) { animation-delay: -0.4s; transform: scale(0.8); border-top-color: rgba(255, 255, 255, 0.7); }
+  .spinner-type-default .spinner-ring:nth-child(3) { animation-delay: -0.8s; transform: scale(0.6); border-top-color: rgba(255, 255, 255, 0.4); }
+
+  .spinner-type-pulse .spinner-pulse {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .loading-text {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .overlay-bg-light .loading-text { color: #333; }
+  .scanning-text { color: #4caf50; font-weight: 600; }
+  .overlay-bg-dark .scanning-text { color: #81c784; }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+  }
+  </style>
+</body>
+</html>
