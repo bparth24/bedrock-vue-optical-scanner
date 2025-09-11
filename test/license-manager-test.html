@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>License Manager Component Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+    }
+    
+    .demo-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .controls-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      height: fit-content;
+    }
+    
+    .demo-wrapper {
+      margin: 20px 0;
+      padding: 20px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    
+    .control-group {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+    }
+    
+    .control-group h4 {
+      margin: 0 0 15px 0;
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+    
+    .control-item {
+      margin: 10px 0;
+    }
+    
+    .control-item label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .control-item select,
+    .control-item input[type="text"],
+    .control-item input[type="number"],
+    .control-item textarea {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      width: 100%;
+      font-family: inherit;
+    }
+    
+    .control-item textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+    }
+    
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+      width: auto;
+    }
+    
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .test-button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      color: white;
+    }
+    
+    .test-button.primary {
+      background: #007bff;
+    }
+    
+    .test-button.primary:hover {
+      background: #0056b3;
+    }
+    
+    .test-button.success {
+      background: #28a745;
+    }
+    
+    .test-button.success:hover {
+      background: #218838;
+    }
+    
+    .test-button.warning {
+      background: #ffc107;
+      color: #212529;
+    }
+    
+    .test-button.warning:hover {
+      background: #e0a800;
+    }
+    
+    .test-button.danger {
+      background: #dc3545;
+    }
+    
+    .test-button.danger:hover {
+      background: #c82333;
+    }
+    
+    .test-button.secondary {
+      background: #6c757d;
+    }
+    
+    .test-button.secondary:hover {
+      background: #545b62;
+    }
+    
+    .test-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 300px;
+      margin: 15px 0;
+    }
+    
+    .event-log {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      max-height: 250px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .event-item {
+      margin: 3px 0;
+      padding: 3px 6px;
+      background: white;
+      border-radius: 3px;
+      border-left: 3px solid #007bff;
+    }
+    
+    .timestamp {
+      color: #666;
+      font-size: 11px;
+    }
+    
+    .scenario-desc {
+      background: #e8f4f8;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border-left: 4px solid #007bff;
+    }
+    
+    .scenario-desc h5 {
+      margin: 0 0 8px 0;
+      color: #0056b3;
+    }
+    
+    .scenario-desc p {
+      margin: 0;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    @media (max-width: 1200px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .checkbox-group {
+        grid-template-columns: 1fr;
+      }
+      
+      .test-button {
+        padding: 12px 15px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <!-- Demo Area -->
+      <div class="demo-area">
+        <h1>LicenseManagerComponent Test</h1>
+        
+        <div class="scenario-desc">
+          <h5>Current Test Scenario: {{ currentScenario.name }}</h5>
+          <p>{{ currentScenario.description }}</p>
+        </div>
+        
+        <!-- License Manager Component Demo -->
+        <div class="demo-wrapper">
+          <h3>License Manager Component</h3>
+          
+          <license-manager-component
+            ref="licenseManager"
+            :pdf417-config="pdf417Config"
+            :license-server="licenseServer"
+            :auto-initialize="autoInitialize"
+            :show-status="showStatus"
+            :show-actions="showActions"
+            :show-error="showError"
+            :retry-attempts="retryAttempts"
+            :retry-delay="retryDelay"
+            @license-initialized="onLicenseInitialized"
+            @license-error="onLicenseError"
+            @license-validated="onLicenseValidated"
+            @status-changed="onStatusChanged" />
+        </div>
+        
+        <!-- Manual Actions -->
+        <div class="control-group">
+          <h4>Manual Actions</h4>
+          <div class="button-grid">
+            <button class="test-button primary" @click="manualInitialize" :disabled="componentInitializing">
+              🔄 Initialize License
+            </button>
+            <button class="test-button success" @click="manualValidate" :disabled="!componentInitialized">
+              ✓ Validate License
+            </button>
+            <button class="test-button warning" @click="manualRetry">
+              ↻ Retry Initialize
+            </button>
+            <button class="test-button secondary" @click="getComponentInfo">
+              📊 Get Component Info
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Controls Area -->
+      <div class="controls-area">
+        <h2>Test Controls</h2>
+        
+        <!-- Test Scenarios -->
+        <div class="control-group">
+          <h4>Test Scenarios</h4>
+          <div class="button-grid">
+            <button class="test-button success" @click="setValidLicenseScenario">
+              ✅ Valid License
+            </button>
+            <button class="test-button primary" @click="setLicenseServerScenario">
+              🌐 License Server
+            </button>
+            <button class="test-button danger" @click="setInvalidLicenseScenario">
+              ❌ Invalid License
+            </button>
+            <button class="test-button warning" @click="setNetworkErrorScenario">
+              📡 Network Error
+            </button>
+            <button class="test-button secondary" @click="setExpiredLicenseScenario">
+              ⏰ Expired License
+            </button>
+            <button class="test-button primary" @click="setManualModeScenario">
+              🎛️ Manual Mode
+            </button>
+          </div>
+        </div>
+        
+        <!-- License Configuration -->
+        <div class="control-group">
+          <h4>License Configuration</h4>
+          
+          <div class="control-item">
+            <label>PDF417 Config (JSON):</label>
+            <textarea v-model="pdf417ConfigJson" placeholder='{"license": "your-license-key"}'></textarea>
+          </div>
+          
+          <div class="control-item">
+            <label>License Server URL:</label>
+            <input type="text" v-model="licenseServer" placeholder="https://license-server.com/validate">
+          </div>
+          
+          <button class="test-button primary" @click="applyConfigFromJson" style="width: 100%; margin-top: 10px;">
+            Apply Configuration
+          </button>
+        </div>
+        
+        <!-- Component Behavior -->
+        <div class="control-group">
+          <h4>Component Behavior</h4>
+          
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="autoInitialize">
+              <label>Auto Initialize</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="showStatus">
+              <label>Show Status</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="showActions">
+              <label>Show Actions</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="showError">
+              <label>Show Error</label>
+            </div>
+          </div>
+          
+          <div class="control-item">
+            <label>Retry Attempts: {{ retryAttempts }}</label>
+            <input type="range" v-model.number="retryAttempts" min="1" max="10" step="1">
+          </div>
+          
+          <div class="control-item">
+            <label>Retry Delay: {{ retryDelay }}ms</label>
+            <input type="range" v-model.number="retryDelay" min="500" max="10000" step="500">
+          </div>
+        </div>
+        
+        <!-- Mock Error Simulation -->
+        <div class="control-group">
+          <h4>Simulate Errors</h4>
+          <div class="button-grid">
+            <button class="test-button danger" @click="simulateNetworkError">
+              📡 Network Error
+            </button>
+            <button class="test-button warning" @click="simulateInvalidLicense">
+              🔑 Invalid License
+            </button>
+            <button class="test-button secondary" @click="simulateTimeout">
+              ⏱️ Timeout Error
+            </button>
+            <button class="test-button primary" @click="simulateRecovery">
+              🔄 Recovery
+            </button>
+          </div>
+        </div>
+        
+        <!-- Component State -->
+        <div class="control-group">
+          <h4>Component State</h4>
+          <div class="state-display">
+            Auto Initialize: {{ autoInitialize }}<br>
+            Show Status: {{ showStatus }}<br>
+            Show Actions: {{ showActions }}<br>
+            Retry Attempts: {{ retryAttempts }}<br>
+            Retry Delay: {{ retryDelay }}ms<br>
+            Component Status: {{ componentStatus }}<br>
+            Component Initialized: {{ componentInitialized }}<br>
+            Component Initializing: {{ componentInitializing }}
+          </div>
+        </div>
+        
+        <!-- Event Log -->
+        <div class="control-group">
+          <h4>Event Log</h4>
+          <div class="event-log">
+            <div v-for="(event, index) in eventLog.slice(-15)" :key="index" class="event-item">
+              <div class="timestamp">{{ event.timestamp }}</div>
+              <strong>{{ event.type }}</strong>: {{ event.data }}
+            </div>
+            <div v-if="eventLog.length === 0" style="color: #666; text-align: center; padding: 20px;">
+              No events yet...
+            </div>
+          </div>
+          <button class="test-button secondary" @click="clearEventLog" style="width: 100%; margin-top: 10px;">
+            Clear Log
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock LicenseManagerComponent with simulated Dynamsoft behavior
+    const LicenseManagerComponent = {
+      name: 'LicenseManagerComponent',
+      template: `
+        <div class="license-manager-container">
+          <!-- License Status Display -->
+          <div v-if="showStatus" class="license-status">
+            <div class="license-indicator">
+              <div :class="['status-icon', statusClass]">
+                {{ getStatusIcon() }}
+              </div>
+              <div class="status-text">
+                <div class="status-label">{{ getStatusLabel() }}</div>
+                <div v-if="statusMessage" class="status-message">{{ statusMessage }}</div>
+              </div>
+            </div>
+            
+            <!-- License Details -->
+            <div v-if="showDetails && licenseInfo.initialized" class="license-details">
+              <div class="detail-item" v-if="licenseInfo.type">
+                <span class="detail-label">Type:</span>
+                <span class="detail-value">{{ licenseInfo.type }}</span>
+              </div>
+              <div class="detail-item" v-if="licenseInfo.organization">
+                <span class="detail-label">Organization:</span>
+                <span class="detail-value">{{ licenseInfo.organization }}</span>
+              </div>
+              <div class="detail-item" v-if="licenseInfo.version">
+                <span class="detail-label">Version:</span>
+                <span class="detail-value">{{ licenseInfo.version }}</span>
+              </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div v-if="showActions" class="license-actions">
+              <button
+                v-if="status === 'error' || status === 'expired'"
+                @click="retryInitialization"
+                :disabled="initializing"
+                class="action-button retry-button">
+                <span class="button-icon">🔄</span>
+                {{ initializing ? 'Retrying...' : 'Retry' }}
+              </button>
+              
+              <button
+                @click="validateLicense"
+                :disabled="initializing || !isInitialized"
+                class="action-button validate-button">
+                <span class="button-icon">✓</span>
+                Validate
+              </button>
+              
+              <button
+                @click="toggleDetails"
+                class="action-button details-button">
+                <span class="button-icon">{{ showDetails ? '▲' : '▼' }}</span>
+                {{ showDetails ? 'Hide' : 'Show' }} Details
+              </button>
+            </div>
+          </div>
+          
+          <!-- Error Display -->
+          <div v-if="lastError && showError && showErrorDisplay" class="license-error">
+            <div class="error-content">
+              <div class="error-icon">⚠️</div>
+              <div class="error-message">
+                <div class="error-title">License Error</div>
+                <div class="error-details">{{ getErrorMessage(lastError) }}</div>
+              </div>
+              <button @click="dismissError" class="error-dismiss">✕</button>
+            </div>
+          </div>
+        </div>
+      `,
+      props: {
+        pdf417Config: { type: Object, required: true },
+        licenseServer: { type: String, default: null },
+        autoInitialize: { type: Boolean, default: true },
+        showStatus: { type: Boolean, default: false },
+        showActions: { type: Boolean, default: false },
+        showError: { type: Boolean, default: true },
+        retryAttempts: { type: Number, default: 3 },
+        retryDelay: { type: Number, default: 2000 }
+      },
+      emits: ['license-initialized', 'license-error', 'license-validated', 'status-changed'],
+      data() {
+        return {
+          status: 'uninitialized',
+          statusMessage: '',
+          initializing: false,
+          validating: false,
+          lastError: null,
+          retryCount: 0,
+          showDetails: false,
+          showErrorDisplay: true,
+          
+          licenseInfo: {
+            type: '',
+            organization: '',
+            expiryDate: null,
+            version: '',
+            initialized: false
+          }
+        };
+      },
+      computed: {
+        isInitialized() {
+          return this.status === 'initialized' && this.licenseInfo.initialized;
+        },
+        statusClass() {
+          return `status-${this.status}`;
+        }
+      },
+      watch: {
+        pdf417Config: {
+          handler() {
+            if (this.autoInitialize && this.status === 'uninitialized') {
+              this.initializeLicense();
+            }
+          },
+          deep: true
+        }
+      },
+      mounted() {
+        if (this.autoInitialize) {
+          this.initializeLicense();
+        }
+      },
+      methods: {
+        async initializeLicense() {
+          if (this.initializing) return;
+          
+          this.initializing = true;
+          this.status = 'initializing';
+          this.statusMessage = 'Initializing Dynamsoft license...';
+          this.lastError = null;
+          this.showErrorDisplay = false;
+          
+          this.$emit('status-changed', {
+            status: this.status,
+            message: this.statusMessage
+          });
+          
+          try {
+            // Simulate license initialization delay
+            await this.delay(1500);
+            
+            // Simulate different outcomes based on configuration
+            const result = await this.simulateLicenseInitialization();
+            
+            if (result.success) {
+              this.status = 'initialized';
+              this.statusMessage = 'License initialized successfully';
+              this.licenseInfo = { ...result.info, initialized: true };
+              this.retryCount = 0;
+              
+              this.$emit('license-initialized', {
+                success: true,
+                info: { ...this.licenseInfo }
+              });
+            } else {
+              throw result.error;
+            }
+            
+          } catch (error) {
+            this.status = 'error';
+            this.statusMessage = 'License initialization failed';
+            this.lastError = error;
+            this.showErrorDisplay = true;
+            
+            this.$emit('license-error', {
+              error,
+              retryable: this.isRetryableError(error)
+            });
+            
+            // Auto-retry for retryable errors
+            if (this.isRetryableError(error) && this.retryCount < this.retryAttempts) {
+              this.scheduleRetry();
+            }
+          } finally {
+            this.initializing = false;
+            this.$emit('status-changed', {
+              status: this.status,
+              message: this.statusMessage
+            });
+          }
+        },
+        
+        async simulateLicenseInitialization() {
+          // Simulate different scenarios based on configuration
+          const config = this.pdf417Config;
+          const server = this.licenseServer;
+          
+          // Check for specific test values
+          if (config.license === 'invalid' || config.license === 'expired') {
+            return {
+              success: false,
+              error: new Error(config.license === 'expired' ? 'License has expired' : 'Invalid license key')
+            };
+          }
+          
+          if (config.license === 'network-error' || server === 'network-error') {
+            return {
+              success: false,
+              error: new Error('NetworkError: Failed to connect to license server')
+            };
+          }
+          
+          if (config.license === 'timeout') {
+            return {
+              success: false,
+              error: new Error('TimeoutError: License validation timeout')
+            };
+          }
+          
+          // Simulate successful initialization
+          return {
+            success: true,
+            info: {
+              type: server ? 'Server-based' : 'License Key',
+              organization: server ? 'Via License Server' : 'Direct License',
+              version: '9.6.1',
+              expiryDate: null
+            }
+          };
+        },
+        
+        async validateLicense() {
+          if (this.validating) return false;
+          
+          this.validating = true;
+          this.statusMessage = 'Validating license...';
+          
+          try {
+            await this.delay(1000);
+            
+            // Simulate validation
+            const valid = this.status === 'initialized';
+            
+            this.$emit('license-validated', {
+              valid,
+              info: { ...this.licenseInfo }
+            });
+            
+            this.statusMessage = valid ? 'License validation successful' : 'License validation failed';
+            return valid;
+            
+          } catch (error) {
+            this.$emit('license-validated', {
+              valid: false,
+              error
+            });
+            
+            this.statusMessage = 'License validation failed';
+            return false;
+            
+          } finally {
+            this.validating = false;
+          }
+        },
+        
+        isRetryableError(error) {
+          const retryableTypes = ['NetworkError', 'TimeoutError', 'Server Error'];
+          return retryableTypes.some(type => error.message.includes(type));
+        },
+        
+        scheduleRetry() {
+          this.retryCount++;
+          this.statusMessage = `Retrying in ${this.retryDelay / 1000} seconds... (${this.retryCount}/${this.retryAttempts})`;
+          
+          setTimeout(() => {
+            this.initializeLicense();
+          }, this.retryDelay);
+        },
+        
+        retryInitialization() {
+          this.retryCount = 0;
+          this.initializeLicense();
+        },
+        
+        dismissError() {
+          this.showErrorDisplay = false;
+          this.lastError = null;
+        },
+        
+        toggleDetails() {
+          this.showDetails = !this.showDetails;
+        },
+        
+        getStatusIcon() {
+          const icons = {
+            uninitialized: '⏳',
+            initializing: '🔄',
+            initialized: '✅',
+            error: '❌',
+            expired: '⏰'
+          };
+          return icons[this.status] || '❓';
+        },
+        
+        getStatusLabel() {
+          const labels = {
+            uninitialized: 'Not Initialized',
+            initializing: 'Initializing...',
+            initialized: 'Licensed',
+            error: 'License Error',
+            expired: 'License Expired'
+          };
+          return labels[this.status] || 'Unknown';
+        },
+        
+        getErrorMessage(error) {
+          if (!error) return '';
+          
+          if (error.message.includes('network') || error.message.includes('NetworkError')) {
+            return 'Network connection failed. Please check your internet connection.';
+          }
+          if (error.message.includes('expired')) {
+            return 'Your license has expired. Please renew your license.';
+          }
+          if (error.message.includes('Invalid')) {
+            return 'Invalid license key. Please check your license configuration.';
+          }
+          if (error.message.includes('timeout') || error.message.includes('TimeoutError')) {
+            return 'License validation timed out. Please try again.';
+          }
+          
+          return error.message || 'An unknown error occurred.';
+        },
+        
+        delay(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
+      }
+    };
+
+    // Vue App
+    const { createApp } = Vue;
+    
+    createApp({
+      components: {
+        LicenseManagerComponent
+      },
+      data() {
+        return {
+          // Component props
+          pdf417Config: { license: 'test-license-key' },
+          licenseServer: null,
+          autoInitialize: true,
+          showStatus: true,
+          showActions: true,
+          showError: true,
+          retryAttempts: 3,
+          retryDelay: 2000,
+          
+          // Configuration JSON
+          pdf417ConfigJson: '{"license": "test-license-key"}',
+          
+          // Component state tracking
+          componentStatus: 'uninitialized',
+          componentInitialized: false,
+          componentInitializing: false,
+          
+          // Current scenario
+          currentScenario: {
+            name: 'Valid License',
+            description: 'Testing with a valid license key for successful initialization'
+          },
+          
+          // Event tracking
+          eventLog: []
+        };
+      },
+      methods: {
+        // Event handlers
+        onLicenseInitialized(data) {
+          this.componentInitialized = data.success;
+          this.componentInitializing = false;
+          this.addEvent('license-initialized', `Success: ${data.success}, Type: ${data.info?.type || 'Unknown'}`);
+        },
+        
+        onLicenseError(data) {
+          this.componentInitialized = false;
+          this.componentInitializing = false;
+          this.addEvent('license-error', `Error: ${data.error.message}, Retryable: ${data.retryable}`);
+        },
+        
+        onLicenseValidated(data) {
+          this.addEvent('license-validated', `Valid: ${data.valid}${data.error ? ', Error: ' + data.error.message : ''}`);
+        },
+        
+        onStatusChanged(data) {
+          this.componentStatus = data.status;
+          this.componentInitializing = data.status === 'initializing';
+          this.addEvent('status-changed', `Status: ${data.status}, Message: ${data.message}`);
+        },
+        
+        // Test scenarios
+        setValidLicenseScenario() {
+          this.currentScenario = {
+            name: 'Valid License',
+            description: 'Testing with a valid license key for successful initialization'
+          };
+          this.pdf417Config = { license: 'valid-license-key' };
+          this.licenseServer = null;
+          this.autoInitialize = true;
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('scenario', 'Valid License scenario set');
+        },
+        
+        setLicenseServerScenario() {
+          this.currentScenario = {
+            name: 'License Server',
+            description: 'Testing license initialization via license server instead of direct key'
+          };
+          this.pdf417Config = { licenseServer: 'https://license-server.example.com' };
+          this.licenseServer = 'https://license-server.example.com';
+          this.autoInitialize = true;
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('scenario', 'License Server scenario set');
+        },
+        
+        setInvalidLicenseScenario() {
+          this.currentScenario = {
+            name: 'Invalid License',
+            description: 'Testing with an invalid license key to trigger error handling'
+          };
+          this.pdf417Config = { license: 'invalid' };
+          this.licenseServer = null;
+          this.autoInitialize = true;
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('scenario', 'Invalid License scenario set');
+        },
+        
+        setNetworkErrorScenario() {
+          this.currentScenario = {
+            name: 'Network Error',
+            description: 'Testing network connectivity issues with automatic retry functionality'
+          };
+          this.pdf417Config = { license: 'network-error' };
+          this.licenseServer = null;
+          this.autoInitialize = true;
+          this.retryAttempts = 2;
+          this.retryDelay = 1000;
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('scenario', 'Network Error scenario set');
+        },
+        
+        setExpiredLicenseScenario() {
+          this.currentScenario = {
+            name: 'Expired License',
+            description: 'Testing with an expired license to see license renewal prompts'
+          };
+          this.pdf417Config = { license: 'expired' };
+          this.licenseServer = null;
+          this.autoInitialize = true;
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('scenario', 'Expired License scenario set');
+        },
+        
+        setManualModeScenario() {
+          this.currentScenario = {
+            name: 'Manual Mode',
+            description: 'Testing manual license initialization with UI controls'
+          };
+          this.pdf417Config = { license: 'manual-license-key' };
+          this.licenseServer = null;
+          this.autoInitialize = false;
+          this.showStatus = true;
+          this.showActions = true;
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('scenario', 'Manual Mode scenario set');
+        },
+        
+        // Manual actions
+        manualInitialize() {
+          if (this.$refs.licenseManager) {
+            this.$refs.licenseManager.initializeLicense();
+            this.addEvent('manual-action', 'Manual initialize triggered');
+          }
+        },
+        
+        manualValidate() {
+          if (this.$refs.licenseManager) {
+            this.$refs.licenseManager.validateLicense();
+            this.addEvent('manual-action', 'Manual validate triggered');
+          }
+        },
+        
+        manualRetry() {
+          if (this.$refs.licenseManager) {
+            this.$refs.licenseManager.retryInitialization();
+            this.addEvent('manual-action', 'Manual retry triggered');
+          }
+        },
+        
+        getComponentInfo() {
+          if (this.$refs.licenseManager) {
+            const info = {
+              status: this.$refs.licenseManager.getStatus(),
+              initialized: this.$refs.licenseManager.isInitialized(),
+              licenseInfo: this.$refs.licenseManager.getLicenseInfo()
+            };
+            this.addEvent('component-info', JSON.stringify(info));
+          }
+        },
+        
+        // Configuration
+        applyConfigFromJson() {
+          try {
+            this.pdf417Config = JSON.parse(this.pdf417ConfigJson);
+            this.addEvent('config-applied', 'Configuration updated from JSON');
+          } catch (error) {
+            this.addEvent('config-error', `Invalid JSON: ${error.message}`);
+            alert('Invalid JSON configuration');
+          }
+        },
+        
+        // Error simulation
+        simulateNetworkError() {
+          this.pdf417Config = { license: 'network-error' };
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('simulate', 'Network error simulated');
+        },
+        
+        simulateInvalidLicense() {
+          this.pdf417Config = { license: 'invalid' };
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('simulate', 'Invalid license simulated');
+        },
+        
+        simulateTimeout() {
+          this.pdf417Config = { license: 'timeout' };
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('simulate', 'Timeout error simulated');
+        },
+        
+        simulateRecovery() {
+          this.pdf417Config = { license: 'recovery-license-key' };
+          this.pdf417ConfigJson = JSON.stringify(this.pdf417Config, null, 2);
+          this.addEvent('simulate', 'Recovery scenario simulated');
+        },
+        
+        // Utility methods
+        clearEventLog() {
+          this.eventLog = [];
+        },
+        
+        addEvent(type, data) {
+          this.eventLog.push({
+            type: type,
+            data: data,
+            timestamp: new Date().toLocaleTimeString()
+          });
+          
+          // Keep only last 100 events
+          if (this.eventLog.length > 100) {
+            this.eventLog = this.eventLog.slice(-100);
+          }
+        }
+      },
+      
+      mounted() {
+        this.addEvent('app-mounted', 'License Manager test app initialized');
+      }
+    }).mount('#app');
+  </script>
+
+  <!-- Include the LicenseManagerComponent styles -->
+  <style>
+    /* LicenseManagerComponent Styles */
+    .license-manager-container {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .license-status {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .license-indicator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .status-icon {
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    .status-icon.status-uninitialized {
+      background: rgba(108, 117, 125, 0.1);
+    }
+
+    .status-icon.status-initializing {
+      background: rgba(0, 123, 255, 0.1);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .status-icon.status-initialized {
+      background: rgba(40, 167, 69, 0.1);
+    }
+
+    .status-icon.status-error {
+      background: rgba(220, 53, 69, 0.1);
+    }
+
+    .status-text {
+      flex: 1;
+    }
+
+    .status-label {
+      font-weight: 600;
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .status-message {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .license-details {
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 6px;
+      padding: 12px;
+      margin: 12px 0;
+    }
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .detail-item:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-weight: 500;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .detail-value {
+      font-size: 14px;
+      color: #333;
+    }
+
+    .license-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .action-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .action-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .retry-button {
+      background: #007bff;
+      border-color: #007bff;
+      color: white;
+    }
+
+    .validate-button {
+      background: #28a745;
+      border-color: #28a745;
+      color: white;
+    }
+
+    .details-button {
+      background: #6c757d;
+      border-color: #6c757d;
+      color: white;
+    }
+
+    .license-error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .error-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .error-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .error-message {
+      flex: 1;
+    }
+
+    .error-title {
+      font-weight: 600;
+      color: #721c24;
+      margin-bottom: 4px;
+    }
+
+    .error-details {
+      color: #721c24;
+      font-size: 14px;
+    }
+
+    .error-dismiss {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #721c24;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+
+    .error-dismiss:hover {
+      opacity: 1;
+      background: rgba(114, 28, 36, 0.1);
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.8;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.05);
+      }
+    }
+  </style>
+</body>
+</html>
