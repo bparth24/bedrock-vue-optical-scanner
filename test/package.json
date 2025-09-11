@@ -25,6 +25,7 @@
     "@bedrock/web": "^3.0.0",
     "@bedrock/web-fontawesome": "^2.0.0",
     "@bedrock/webpack": "^9.0.3",
+    "@bedrock/web-optical-scanner": "file:../../bedrock-web-optical-scanner",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   }

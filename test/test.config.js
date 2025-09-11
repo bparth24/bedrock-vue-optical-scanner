@@ -20,7 +20,7 @@ config.karma.config.webpack.resolve = {
   ]
 };
 
-// Fallback for events (keeping your existing line)
+// Fallback for events
 import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 config.karma.config.webpack.resolve.fallback = {

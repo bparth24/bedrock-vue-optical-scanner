@@ -1,10 +1,18 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import * as bedrock from '@bedrock/core';
+/*!
+ * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
+ */
+import '@bedrock/core';
+import '@bedrock/express';
+import '@bedrock/karma';
+import '@bedrock/quasar';
+import '@bedrock/server';
 import '@bedrock/views';
+import '@bedrock/vue';
+import '@bedrock/web';
+import '@bedrock/web-fontawesome';
 import '@bedrock/webpack';
 
-import './config.js';
-
-bedrock.start();
+import './test.config.js';

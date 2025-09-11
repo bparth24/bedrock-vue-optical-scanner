@@ -1,6 +1,6 @@
 {
   "name": "@bedrock/vue-optical-scanner",
-  "version": "1.0.0-0",
+  "version": "0.0.1",
   "type": "module",
   "description": "Vue-specific UI component library consumes the bedrock-web-optical-scanner for all scanning logic, provides reusable Vue components for optical scanning UIs, replaces the combined scanning+UI approach in existing libraries",
   "exports": {
@@ -26,12 +26,12 @@
     "eslint": "^8.57.1",
     "eslint-config-digitalbazaar": "^5.2.0",
     "eslint-plugin-jsdoc": "^51.4.1",
-    "eslint-plugin-unicorn": "^56.0.1",
     "eslint-plugin-quasar": "^1.1.0",
+    "eslint-plugin-unicorn": "^56.0.1",
     "eslint-plugin-vue": "^9.23.0",
-    "vue": "^3.4.21",
     "jsdoc": "^4.0.2",
-    "jsdoc-to-markdown": "^9.0.2"
+    "jsdoc-to-markdown": "^9.0.2",
+    "vue": "^3.4.21"
   },
   "engines": {
     "node": ">=20"

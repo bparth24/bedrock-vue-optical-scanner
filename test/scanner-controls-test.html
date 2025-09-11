@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanner Controls Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .controls-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 500px;
+    }
+    
+    .test-controls {
+      background: white;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+    
+    button {
+      margin: 5px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    @media (max-width: 768px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <div class="controls-wrapper">
+        <h1>Scanner Controls Test</h1>
+        
+        <div class="test-controls">
+          <h3>Test Actions:</h3>
+          <button @click="simulateScanning">Simulate Scanning</button>
+          <button @click="simulateSuccess">Simulate Success</button>
+          <button @click="simulateError">Simulate Error</button>
+          <button @click="disabled = !disabled">{{ disabled ? 'Enable' : 'Disable' }}</button>
+        </div>
+        
+        <scanner-controls-component
+          :formats-to-support="formatsToSupport"
+          :available-formats="availableFormats"
+          :mode="mode"
+          :scanning="scanning"
+          :disabled="disabled"
+          :continuous-scanning="continuousScanning"
+          :last-scan-result="lastScanResult"
+          @scan-triggered="onScanTriggered"
+          @formats-changed="onFormatsChanged"
+          @mode-changed="onModeChanged"
+          @continuous-changed="onContinuousChanged" />
+      </div>
+      
+      <div class="state-display">
+        <h3>Current State:</h3>
+        <pre>{{ JSON.stringify({
+          formatsToSupport,
+          mode,
+          scanning,
+          disabled,
+          continuousScanning,
+          lastScanResult,
+          eventLog: eventLog.slice(-10)
+        }, null, 2) }}</pre>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock ScannerControlsComponent
+    const ScannerControlsComponent = {
+      name: 'ScannerControlsComponent',
+      template: `
+        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+          <div style="margin-bottom: 20px;">
+            <h3>Scan Formats</h3>
+            <div v-for="format in availableFormats" :key="format" style="margin: 8px 0;">
+              <label style="display: flex; align-items: center; gap: 8px;">
+                <input 
+                  type="checkbox"
+                  :value="format"
+                  :checked="selectedFormats.includes(format)"
+                  @change="onFormatChange(format, $event.target.checked)" />
+                <span>{{ getFormatLabel(format) }}</span>
+              </label>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <h3>Scan Mode</h3>
+            <div v-for="modeOption in modeOptions" :key="modeOption" style="margin: 8px 0;">
+              <label style="display: flex; align-items: center; gap: 8px;">
+                <input 
+                  type="radio"
+                  :value="modeOption"
+                  :checked="mode === modeOption"
+                  @change="$emit('mode-changed', {mode: modeOption})"
+                  name="mode" />
+                <span>{{ modeOption.toUpperCase() }}</span>
+              </label>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input 
+                type="checkbox"
+                :checked="continuousScanning"
+                @change="$emit('continuous-changed', {continuous: $event.target.checked})" />
+              <span>Continuous Scanning</span>
+            </label>
+          </div>
+          
+          <button 
+            @click="$emit('scan-triggered')"
+            :disabled="disabled || selectedFormats.length === 0"
+            :style="{
+              padding: '16px 24px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              background: scanning ? '#ffc107' : '#28a745',
+              color: scanning ? '#000' : '#fff',
+              opacity: (disabled || selectedFormats.length === 0) ? 0.5 : 1
+            }">
+            {{ scanning ? 'Scanning...' : (continuousScanning ? 'Start Continuous' : 'Scan Now') }}
+          </button>
+          
+          <div v-if="lastScanResult" style="margin-top: 16px; padding: 12px; background: #f8f9fa; border-radius: 6px;">
+            <strong>Last Result:</strong> {{ lastScanResult.success ? 'Success' : 'Failed' }}
+            <br>{{ lastScanResult.message }}
+          </div>
+        </div>
+      `,
+      props: ['formatsToSupport', 'availableFormats', 'mode', 'scanning', 'disabled', 'continuousScanning', 'lastScanResult'],
+      emits: ['scan-triggered', 'formats-changed', 'mode-changed', 'continuous-changed'],
+      data() {
+        return {
+          selectedFormats: [...this.formatsToSupport],
+          modeOptions: ['first', 'all', 'exhaustive']
+        };
+      },
+      methods: {
+        onFormatChange(format, checked) {
+          const newFormats = checked 
+            ? [...this.selectedFormats, format]
+            : this.selectedFormats.filter(f => f !== format);
+          
+          this.selectedFormats = newFormats;
+          this.$emit('formats-changed', { formats: newFormats });
+        },
+        
+        getFormatLabel(format) {
+          const labels = {
+            'qr_code': 'QR Code',
+            'pdf417': 'PDF417',
+            'pdf417_enhanced': 'PDF417 Enhanced',
+            'mrz': 'MRZ'
+          };
+          return labels[format] || format.toUpperCase();
+        }
+      },
+      watch: {
+        formatsToSupport: {
+          handler(newFormats) {
+            this.selectedFormats = [...newFormats];
+          },
+          immediate: true
+        }
+      }
+    };
+
+    const { createApp } = Vue;
+
+    createApp({
+      components: {
+        ScannerControlsComponent
+      },
+      data() {
+        return {
+          formatsToSupport: ['qr_code'],
+          availableFormats: ['qr_code', 'pdf417', 'pdf417_enhanced', 'mrz'],
+          mode: 'first',
+          scanning: false,
+          disabled: false,
+          continuousScanning: false,
+          lastScanResult: null,
+          eventLog: []
+        };
+      },
+      methods: {
+        onScanTriggered() {
+          this.logEvent('scan-triggered');
+          console.log('Scan triggered!');
+        },
+        
+        onFormatsChanged(data) {
+          this.logEvent('formats-changed', data);
+          this.formatsToSupport = data.formats;
+        },
+        
+        onModeChanged(data) {
+          this.logEvent('mode-changed', data);
+          this.mode = data.mode;
+        },
+        
+        onContinuousChanged(data) {
+          this.logEvent('continuous-changed', data);
+          this.continuousScanning = data.continuous;
+        },
+        
+        simulateScanning() {
+          this.scanning = true;
+          this.lastScanResult = null;
+          setTimeout(() => {
+            this.scanning = false;
+          }, 2000);
+        },
+        
+        simulateSuccess() {
+          this.lastScanResult = {
+            success: true,
+            length: 2,
+            message: 'Found 2 results'
+          };
+        },
+        
+        simulateError() {
+          this.lastScanResult = {
+            success: false,
+            error: 'No codes detected',
+            message: 'No codes detected'
+          };
+        },
+        
+        logEvent(event, data = null) {
+          this.eventLog.push({
+            timestamp: new Date().toLocaleTimeString(),
+            event,
+            data
+          });
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

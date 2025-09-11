@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Controls Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .controls-wrapper {
+      margin: 20px 0;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <h1>CameraControlsComponent Test</h1>
+      
+      <div class="controls-wrapper">
+        <camera-controls-component
+          :camera-list="cameraList"
+          :capabilities="capabilities"
+          :constraints="constraints"
+          :current-device="currentDevice"
+          :torch-on="torchOn"
+          :zoom-level="zoomLevel"
+          :disabled="disabled"
+          @device-changed="onDeviceChanged"
+          @torch-toggled="onTorchToggled"
+          @zoom-changed="onZoomChanged" />
+      </div>
+      
+      <div class="state-display">
+        <h3>Current State:</h3>
+        <pre>{{ JSON.stringify({
+          currentDevice,
+          torchOn,
+          zoomLevel,
+          disabled,
+          capabilities
+        }, null, 2) }}</pre>
+      </div>
+      
+      <button @click="disabled = !disabled">
+        {{ disabled ? 'Enable' : 'Disable' }} Controls
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import CameraControlsComponent (using mock for now)
+    const CameraControlsComponent = {
+      name: 'CameraControlsComponent',
+      template: `
+        <div style="background: rgba(0,0,0,0.7); padding: 16px; border-radius: 8px; color: white;">
+          <div style="margin-bottom: 12px;">
+            <label style="display: block; margin-bottom: 4px;">Camera:</label>
+            <select :value="currentDevice" @change="$emit('device-changed', {deviceId: $event.target.value})" style="padding: 8px; width: 100%;">
+              <option value="">Select Camera</option>
+              <option v-for="device in cameraList" :key="device.deviceId" :value="device.deviceId">
+                {{ device.label }}
+              </option>
+            </select>
+          </div>
+          
+          <div v-if="capabilities.torch" style="margin-bottom: 12px;">
+            <button 
+              @click="$emit('torch-toggled', {torchOn: !torchOn})"
+              :style="{
+                padding: '10px 16px',
+                background: torchOn ? '#ffa500' : '#444',
+                color: torchOn ? '#000' : '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }">
+              {{ torchOn ? '🔦 Torch On' : '💡 Torch Off' }}
+            </button>
+          </div>
+          
+          <div v-if="capabilities.zoom">
+            <label style="display: block; margin-bottom: 4px;">Zoom: {{ zoomLevel }}x</label>
+            <input 
+              type="range"
+              :value="zoomLevel"
+              :min="constraints.zoom.min"
+              :max="constraints.zoom.max"
+              :step="constraints.zoom.step"
+              @change="$emit('zoom-changed', {zoomLevel: parseFloat($event.target.value)})"
+              style="width: 100%;" />
+          </div>
+        </div>
+      `,
+      props: ['cameraList', 'capabilities', 'constraints', 'currentDevice', 'torchOn', 'zoomLevel', 'disabled'],
+      emits: ['device-changed', 'torch-toggled', 'zoom-changed']
+    };
+
+    const { createApp } = Vue;
+
+    createApp({
+      components: {
+        CameraControlsComponent
+      },
+      data() {
+        return {
+          currentDevice: '',
+          torchOn: false,
+          zoomLevel: 2,
+          disabled: false,
+          cameraList: [
+            { deviceId: 'camera1', label: 'Front Camera' },
+            { deviceId: 'camera2', label: 'Back Camera' },
+            { deviceId: 'camera3', label: 'USB Camera' }
+          ],
+          capabilities: {
+            torch: true,
+            zoom: true
+          },
+          constraints: {
+            zoom: { min: 1, max: 8, step: 0.5 }
+          }
+        };
+      },
+      methods: {
+        onDeviceChanged(data) {
+          console.log('Device changed:', data);
+          this.currentDevice = data.deviceId;
+        },
+        
+        onTorchToggled(data) {
+          console.log('Torch toggled:', data);
+          this.torchOn = data.torchOn;
+        },
+        
+        onZoomChanged(data) {
+          console.log('Zoom changed:', data);
+          this.zoomLevel = data.zoomLevel;
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
