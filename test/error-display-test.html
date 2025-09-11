@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Error Display Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .demo-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .mock-scanner-container {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(45deg, #4caf50 0%, #45a049 100%);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      text-align: center;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background: #0056b3;
+    }
+    
+    button.error {
+      background: #dc3545;
+    }
+    
+    button.error:hover {
+      background: #c82333;
+    }
+    
+    button.warning {
+      background: #ffc107;
+      color: #212529;
+    }
+    
+    button.warning:hover {
+      background: #e0a800;
+    }
+    
+    button.success {
+      background: #28a745;
+    }
+    
+    button.success:hover {
+      background: #218838;
+    }
+    
+    .control-group {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+    
+    .control-group h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    
+    label {
+      display: block;
+      margin: 8px 0 4px 0;
+      font-weight: 500;
+    }
+    
+    select, input[type="number"], input[type="text"] {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      width: 100%;
+      max-width: 200px;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 700px;
+    }
+    
+    .test-scenarios {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+    
+    .scenario-button {
+      margin: 5px;
+      padding: 12px 18px;
+      background: #007bff;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .scenario-button:hover {
+      background: #0056b3;
+    }
+    
+    .scenario-button.camera-error {
+      background: #dc3545;
+    }
+    
+    .scenario-button.scan-error {
+      background: #fd7e14;
+    }
+    
+    .scenario-button.recovery {
+      background: #28a745;
+    }
+    
+    .error-type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+    }
+    
+    @media (max-width: 768px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .controls, .error-type-grid {
+        flex-direction: column;
+      }
+      
+      button, .scenario-button {
+        width: 100%;
+        margin: 2px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <div class="demo-area">
+        <h1>ErrorDisplayComponent Test</h1>
+        
+        <!-- Mock Scanner/Camera Container -->
+        <div class="mock-scanner-container">
+          📱 Mock Scanner Interface<br>
+          <small>Error overlays will appear here</small>
+          
+          <!-- Error Display Component -->
+          <error-display-component
+            ref="errorDisplay"
+            :camera-error="cameraError"
+            :scan-error="scanError"
+            :retryable="retryable"
+            :auto-retry-delay="autoRetryDelay"
+            :max-auto-retries="maxAutoRetries"
+            :overlay="overlay"
+            :position="position"
+            @retry="onRetry"
+            @dismiss="onDismiss"
+            @auto-retry="onAutoRetry" />
+        </div>
+        
+        <!-- Error Type Controls -->
+        <div class="control-group">
+          <h4>Camera Errors</h4>
+          <div class="error-type-grid">
+            <button class="error" @click="setCameraError('permission')">
+              Permission Denied
+            </button>
+            <button class="error" @click="setCameraError('not-found')">
+              No Camera Found
+            </button>
+            <button class="error" @click="setCameraError('in-use')">
+              Camera In Use
+            </button>
+            <button class="error" @click="setCameraError('not-supported')">
+              Not Supported
+            </button>
+            <button class="error" @click="setCameraError('generic')">
+              Generic Error
+            </button>
+          </div>
+        </div>
+        
+        <div class="control-group">
+          <h4>Scan Errors</h4>
+          <div class="error-type-grid">
+            <button class="warning" @click="setScanError('no-results')">
+              No Results Found
+            </button>
+            <button class="warning" @click="setScanError('parsing')">
+              License Parse Error
+            </button>
+            <button class="warning" @click="setScanError('file')">
+              File Upload Error
+            </button>
+            <button class="warning" @click="setScanError('generic')">
+              Generic Scan Error
+            </button>
+          </div>
+        </div>
+        
+        <!-- Configuration Controls -->
+        <div class="control-group">
+          <h4>Display Settings</h4>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" v-model="overlay" id="overlay">
+            <label for="overlay">Show as Overlay</label>
+          </div>
+          
+          <div class="checkbox-group">
+            <input type="checkbox" v-model="retryable" id="retryable">
+            <label for="retryable">Allow Retry</label>
+          </div>
+          
+          <label>
+            Position:
+            <select v-model="position">
+              <option value="center">Center</option>
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
+              <option value="inline">Inline</option>
+            </select>
+          </label>
+          
+          <label>
+            Auto Retry Delay (seconds):
+            <input type="number" v-model.number="autoRetryDelay" min="0" max="10">
+          </label>
+          
+          <label>
+            Max Auto Retries:
+            <input type="number" v-model.number="maxAutoRetries" min="1" max="10">
+          </label>
+        </div>
+        
+        <!-- Action Controls -->
+        <div class="control-group">
+          <h4>Actions</h4>
+          <div class="controls">
+            <button class="success" @click="clearAllErrors">
+              ✅ Clear All Errors
+            </button>
+            <button @click="simulateRetrySuccess">
+              🔄 Simulate Retry Success
+            </button>
+            <button @click="customErrorMessage">
+              ✏️ Custom Error Message
+            </button>
+          </div>
+        </div>
+        
+        <!-- Test Scenarios -->
+        <div class="test-scenarios">
+          <h4>🧪 Production Test Scenarios</h4>
+          
+          <div style="margin-bottom: 15px;">
+            <strong>Camera Error Scenarios:</strong><br>
+            <button class="scenario-button camera-error" @click="runPermissionDeniedScenario">
+              Permission Denied Flow
+            </button>
+            <button class="scenario-button camera-error" @click="runCameraNotFoundScenario">
+              No Camera Available
+            </button>
+            <button class="scenario-button camera-error" @click="runCameraInUseScenario">
+              Camera Busy Flow
+            </button>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <strong>Scan Error Scenarios:</strong><br>
+            <button class="scenario-button scan-error" @click="runNoResultsScenario">
+              No Barcode Found
+            </button>
+            <button class="scenario-button scan-error" @click="runParsingErrorScenario">
+              License Parse Fail
+            </button>
+            <button class="scenario-button scan-error" @click="runFileUploadErrorScenario">
+              Upload Error
+            </button>
+          </div>
+          
+          <div>
+            <strong>Recovery Scenarios:</strong><br>
+            <button class="scenario-button recovery" @click="runAutoRetryScenario">
+              Auto Retry Flow
+            </button>
+            <button class="scenario-button recovery" @click="runErrorRecoveryScenario">
+              Full Error Recovery
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- State Display -->
+      <div class="state-display">
+        <h3>Component State:</h3>
+        <pre>{{ JSON.stringify({
+          cameraError: cameraError ? getErrorDescription(cameraError) : null,
+          scanError: scanError ? getErrorDescription(scanError) : null,
+          retryable,
+          autoRetryDelay,
+          maxAutoRetries,
+          overlay,
+          position
+        }, null, 2) }}</pre>
+        
+        <h4>Event Log (last 15):</h4>
+        <div v-for="(event, index) in eventLog.slice(-15)" :key="index" style="margin: 5px 0; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 3px;">
+          <strong>{{ event.timestamp }}:</strong> {{ event.type }}<br>
+          <small style="color: #666;">{{ event.message }}</small>
+        </div>
+        
+        <h4>Production Error Types:</h4>
+        <div style="background: rgba(0,0,0,0.05); padding: 12px; border-radius: 3px; margin: 10px 0; font-size: 11px;">
+          <strong>Camera Errors:</strong><br>
+          • NotAllowedError - Permission denied<br>
+          • NotFoundError - No camera device<br>
+          • NotReadableError - Camera in use<br>
+          • NotSupportedError - Browser/device limitation<br><br>
+          
+          <strong>Scan Errors:</strong><br>
+          • No results found - No barcode detected<br>
+          • Parsing errors - Invalid barcode format<br>
+          • File errors - Upload/processing issues<br>
+          • License errors - Driver license specific<br><br>
+          
+          <strong>Recovery Actions:</strong><br>
+          • Manual retry with user action<br>
+          • Auto retry with countdown<br>
+          • Help modals with instructions<br>
+          • Alternative methods (upload vs camera)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock ErrorDisplayComponent
+    const ErrorDisplayComponent = {
+      name: 'ErrorDisplayComponent',
+      template: `
+        <div
+          v-if="hasError"
+          class="error-display-container"
+          :class="containerClasses">
+          
+          <!-- Camera Error Display -->
+          <div
+            v-if="cameraError"
+            class="error-content camera-error">
+            
+            <!-- Error Icon -->
+            <div class="error-icon">
+              <i class="fas fa-video-slash" v-if="isCameraPermissionError"></i>
+              <i class="fas fa-exclamation-triangle" v-else></i>
+            </div>
+            
+            <!-- Error Message -->
+            <div class="error-message">
+              <h3 class="error-title">{{ cameraErrorTitle }}</h3>
+              <p class="error-description">{{ cameraErrorMessage }}</p>
+            </div>
+            
+            <!-- Recovery Actions -->
+            <div class="error-actions">
+              <button
+                v-if="retryable && !autoRetryActive"
+                class="action-button primary"
+                @click="handleRetry('camera')">
+                <i class="fas fa-redo"></i>
+                Try Again
+              </button>
+              
+              <button
+                v-if="isCameraPermissionError"
+                class="action-button secondary"
+                @click="showCameraHelp = true">
+                <i class="fas fa-question-circle"></i>
+                Help
+              </button>
+              
+              <button
+                class="action-button secondary"
+                @click="handleDismiss('camera')">
+                <i class="fas fa-times"></i>
+                {{ isCriticalError ? 'Close' : 'Dismiss' }}
+              </button>
+            </div>
+            
+            <!-- Auto Retry Indicator -->
+            <div
+              v-if="autoRetryActive"
+              class="auto-retry-indicator">
+              <div class="retry-spinner"></div>
+              <span>Retrying in {{ autoRetryCountdown }}s...</span>
+            </div>
+          </div>
+          
+          <!-- Scan Error Display -->
+          <div
+            v-if="scanError && !cameraError"
+            class="error-content scan-error">
+            
+            <!-- Error Icon -->
+            <div class="error-icon">
+              <i class="fas fa-search" v-if="isNoResultsError"></i>
+              <i class="fas fa-exclamation-triangle" v-else></i>
+            </div>
+            
+            <!-- Error Message -->
+            <div class="error-message">
+              <h3 class="error-title">{{ scanErrorTitle }}</h3>
+              <p class="error-description">{{ scanErrorMessage }}</p>
+            </div>
+            
+            <!-- Recovery Actions -->
+            <div class="error-actions">
+              <button
+                v-if="retryable && !autoRetryActive"
+                class="action-button primary"
+                @click="handleRetry('scan')">
+                <i class="fas fa-redo"></i>
+                Try Again
+              </button>
+              
+              <button
+                v-if="isNoResultsError"
+                class="action-button secondary"
+                @click="showScanHelp = true">
+                <i class="fas fa-lightbulb"></i>
+                Tips
+              </button>
+              
+              <button
+                class="action-button secondary"
+                @click="handleDismiss('scan')">
+                <i class="fas fa-times"></i>
+                Dismiss
+              </button>
+            </div>
+          </div>
+          
+          <!-- Help Modals -->
+          <div
+            v-if="showCameraHelp"
+            class="help-modal-overlay"
+            @click.self="showCameraHelp = false">
+            <div class="help-modal">
+              <div class="help-header">
+                <h3>Camera Permission Help</h3>
+                <button class="help-close" @click="showCameraHelp = false">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="help-content">
+                <div class="help-step">
+                  <strong>Chrome/Edge:</strong>
+                  <ol>
+                    <li>Click the camera icon in the address bar</li>
+                    <li>Select "Always allow camera access"</li>
+                    <li>Reload the page</li>
+                  </ol>
+                </div>
+                <div class="help-step">
+                  <strong>Firefox:</strong>
+                  <ol>
+                    <li>Click the shield icon in the address bar</li>
+                    <li>Turn off "Blocked" for camera</li>
+                    <li>Refresh the page</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div
+            v-if="showScanHelp"
+            class="help-modal-overlay"
+            @click.self="showScanHelp = false">
+            <div class="help-modal">
+              <div class="help-header">
+                <h3>Scanning Tips</h3>
+                <button class="help-close" @click="showScanHelp = false">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div class="help-content">
+                <div class="help-step">
+                  <strong>For QR Codes:</strong>
+                  <ul>
+                    <li>Hold camera 6-12 inches away</li>
+                    <li>Ensure good lighting</li>
+                    <li>Keep the code flat and centered</li>
+                  </ul>
+                </div>
+                <div class="help-step">
+                  <strong>For PDF417 (Driver License):</strong>
+                  <ul>
+                    <li>Scan the barcode on the back</li>
+                    <li>Hold steady within the orange box</li>
+                    <li>Avoid shadows and glare</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+      props: {
+        cameraError: { type: [Boolean, String, Error], default: null },
+        scanError: { type: [String, Error], default: null },
+        retryable: { type: Boolean, default: true },
+        autoRetryDelay: { type: Number, default: 0 },
+        maxAutoRetries: { type: Number, default: 3 },
+        overlay: { type: Boolean, default: true },
+        position: { type: String, default: 'center' }
+      },
+      emits: ['retry', 'dismiss', 'auto-retry'],
+      data() {
+        return {
+          showCameraHelp: false,
+          showScanHelp: false,
+          autoRetryActive: false,
+          autoRetryCountdown: 0,
+          autoRetryAttempts: 0,
+          autoRetryTimer: null
+        };
+      },
+      computed: {
+        hasError() {
+          return !!(this.cameraError || this.scanError);
+        },
+        containerClasses() {
+          return [
+            {
+              'error-overlay': this.overlay,
+              'error-inline': !this.overlay,
+              'error-critical': this.isCriticalError
+            },
+            `error-position-${this.position}`
+          ];
+        },
+        cameraErrorType() {
+          if (!this.cameraError) return null;
+          const errorString = this.getErrorString(this.cameraError);
+          if (errorString.includes('NotAllowedError') || errorString.includes('permission')) return 'permission';
+          if (errorString.includes('NotFoundError') || errorString.includes('not found')) return 'not-found';
+          if (errorString.includes('NotReadableError') || errorString.includes('in use')) return 'in-use';
+          if (errorString.includes('NotSupportedError') || errorString.includes('not supported')) return 'not-supported';
+          return 'unknown';
+        },
+        isCameraPermissionError() {
+          return this.cameraErrorType === 'permission';
+        },
+        isCriticalError() {
+          return this.cameraErrorType === 'not-found' || this.cameraErrorType === 'not-supported';
+        },
+        cameraErrorTitle() {
+          switch (this.cameraErrorType) {
+            case 'permission': return 'Camera Permission Required';
+            case 'not-found': return 'No Camera Found';
+            case 'in-use': return 'Camera In Use';
+            case 'not-supported': return 'Camera Not Supported';
+            default: return 'Camera Error';
+          }
+        },
+        cameraErrorMessage() {
+          switch (this.cameraErrorType) {
+            case 'permission':
+              return 'Please allow camera access to scan barcodes. You can also upload a photo instead.';
+            case 'not-found':
+              return 'No camera was found on this device. Please use the upload option to scan from a photo.';
+            case 'in-use':
+              return 'The camera is being used by another application. Please close other apps and try again.';
+            case 'not-supported':
+              return 'Camera access is not supported on this device. Please use the upload option.';
+            default:
+              return this.getErrorString(this.cameraError) || 'An error occurred accessing the camera.';
+          }
+        },
+        scanErrorType() {
+          if (!this.scanError) return null;
+          const errorString = this.getErrorString(this.scanError);
+          if (errorString.includes('no results') || errorString.includes('not found')) return 'no-results';
+          if (errorString.includes('license') || errorString.includes('parsing')) return 'parsing';
+          if (errorString.includes('file') || errorString.includes('upload')) return 'file';
+          return 'unknown';
+        },
+        isNoResultsError() {
+          return this.scanErrorType === 'no-results';
+        },
+        scanErrorTitle() {
+          switch (this.scanErrorType) {
+            case 'no-results': return 'No Barcode Found';
+            case 'parsing': return 'Invalid Barcode';
+            case 'file': return 'File Error';
+            default: return 'Scan Error';
+          }
+        },
+        scanErrorMessage() {
+          switch (this.scanErrorType) {
+            case 'no-results':
+              return 'No barcode could be detected. Please ensure the barcode is clear and well-lit, then try again.';
+            case 'parsing':
+              return 'The barcode was detected but could not be parsed. Please ensure it\'s a valid driver license barcode.';
+            case 'file':
+              return 'There was an error processing the uploaded file. Please try a different image.';
+            default:
+              return this.getErrorString(this.scanError) || 'An error occurred during scanning.';
+          }
+        }
+      },
+      watch: {
+        cameraError(newError, oldError) {
+          if (newError && !oldError && this.shouldAutoRetry('camera')) {
+            this.startAutoRetry('camera');
+          }
+        },
+        scanError(newError, oldError) {
+          if (newError && !oldError && this.shouldAutoRetry('scan')) {
+            this.startAutoRetry('scan');
+          }
+        }
+      },
+      beforeUnmount() {
+        this.clearAutoRetry();
+      },
+      methods: {
+        getErrorString(error) {
+          if (typeof error === 'string') return error;
+          if (error instanceof Error) return error.message || error.name;
+          if (error && typeof error === 'object') return error.message || JSON.stringify(error);
+          return String(error);
+        },
+        handleRetry(type) {
+          this.clearAutoRetry();
+          this.$emit('retry', { type });
+        },
+        handleDismiss(type) {
+          this.clearAutoRetry();
+          this.$emit('dismiss', { type });
+        },
+        shouldAutoRetry(type) {
+          if (this.autoRetryDelay <= 0) return false;
+          if (this.autoRetryAttempts >= this.maxAutoRetries) return false;
+          if (type === 'camera' && this.isCriticalError) return false;
+          return true;
+        },
+        startAutoRetry(type) {
+          if (this.autoRetryActive) return;
+          this.autoRetryActive = true;
+          this.autoRetryCountdown = this.autoRetryDelay;
+          this.autoRetryTimer = setInterval(() => {
+            this.autoRetryCountdown--;
+            if (this.autoRetryCountdown <= 0) {
+              this.executeAutoRetry(type);
+            }
+          }, 1000);
+        },
+        executeAutoRetry(type) {
+          this.clearAutoRetry();
+          this.autoRetryAttempts++;
+          this.$emit('auto-retry', { type, attempt: this.autoRetryAttempts });
+        },
+        clearAutoRetry() {
+          if (this.autoRetryTimer) {
+            clearInterval(this.autoRetryTimer);
+            this.autoRetryTimer = null;
+          }
+          this.autoRetryActive = false;
+          this.autoRetryCountdown = 0;
+        }
+      }
+    };
+
+    // Vue App
+    const { createApp } = Vue;
+    
+    createApp({
+      components: {
+        ErrorDisplayComponent
+      },
+      data() {
+        return {
+          // Error states
+          cameraError: null,
+          scanError: null,
+          
+          // Configuration
+          retryable: true,
+          autoRetryDelay: 0,
+          maxAutoRetries: 3,
+          overlay: true,
+          position: 'center',
+          
+          // Event tracking
+          eventLog: []
+        };
+      },
+      methods: {
+        // Error setters
+        setCameraError(type) {
+          this.clearAllErrors();
+          const errors = {
+            'permission': new Error('NotAllowedError: Permission denied'),
+            'not-found': new Error('NotFoundError: No camera found on this device'),
+            'in-use': new Error('NotReadableError: Camera is already in use by another application'),
+            'not-supported': new Error('NotSupportedError: Camera access is not supported'),
+            'generic': 'Camera access failed. Please try again.'
+          };
+          this.cameraError = errors[type];
+          this.addEvent('camera-error-set', `Camera error set: ${type}`);
+        },
+        
+        setScanError(type) {
+          this.clearAllErrors();
+          const errors = {
+            'no-results': 'No results found. Please ensure the barcode is clear and well-lit.',
+            'parsing': 'There was an error scanning your license. Please try again.',
+            'file': 'There was an error processing the uploaded file. Please try a different image.',
+            'generic': 'An error occurred during scanning. Please try again.'
+          };
+          this.scanError = errors[type];
+          this.addEvent('scan-error-set', `Scan error set: ${type}`);
+        },
+        
+        clearAllErrors() {
+          this.cameraError = null;
+          this.scanError = null;
+          this.addEvent('errors-cleared', 'All errors cleared');
+        },
+        
+        // Event handlers
+        onRetry(data) {
+          this.addEvent('retry-clicked', `User clicked retry for ${data.type}`);
+          // Simulate retry success
+          setTimeout(() => {
+            this.clearAllErrors();
+            this.addEvent('retry-success', `${data.type} retry succeeded`);
+          }, 1000);
+        },
+        
+        onDismiss(data) {
+          this.addEvent('dismiss-clicked', `User dismissed ${data.type} error`);
+          if (data.type === 'camera') {
+            this.cameraError = null;
+          } else {
+            this.scanError = null;
+          }
+        },
+        
+        onAutoRetry(data) {
+          this.addEvent('auto-retry', `Auto retry attempt ${data.attempt} for ${data.type}`);
+          // Simulate auto retry
+          setTimeout(() => {
+            if (data.attempt < this.maxAutoRetries) {
+              this.addEvent('auto-retry-failed', `Auto retry ${data.attempt} failed, will try again`);
+            } else {
+              this.clearAllErrors();
+              this.addEvent('auto-retry-success', `Auto retry succeeded on attempt ${data.attempt}`);
+            }
+          }, 500);
+        },
+        
+        // Utility functions
+        simulateRetrySuccess() {
+          this.addEvent('simulate-success', 'Simulating successful retry');
+          setTimeout(() => {
+            this.clearAllErrors();
+          }, 1000);
+        },
+        
+        customErrorMessage() {
+          const message = prompt('Enter custom error message:');
+          if (message) {
+            this.scanError = message;
+            this.addEvent('custom-error', `Custom error set: ${message.substring(0, 30)}...`);
+          }
+        },
+        
+        getErrorDescription(error) {
+          if (typeof error === 'string') return error.substring(0, 50) + '...';
+          if (error instanceof Error) return error.message.substring(0, 50) + '...';
+          return 'Unknown error type';
+        },
+        
+        // Test scenarios
+        async runPermissionDeniedScenario() {
+          this.addEvent('scenario-start', 'Permission denied scenario started');
+          this.autoRetryDelay = 3;
+          this.setCameraError('permission');
+        },
+        
+        async runCameraNotFoundScenario() {
+          this.addEvent('scenario-start', 'No camera scenario started');
+          this.setCameraError('not-found');
+        },
+        
+        async runCameraInUseScenario() {
+          this.addEvent('scenario-start', 'Camera in use scenario started');
+          this.autoRetryDelay = 2;
+          this.setCameraError('in-use');
+        },
+        
+        async runNoResultsScenario() {
+          this.addEvent('scenario-start', 'No results scenario started');
+          this.setScanError('no-results');
+        },
+        
+        async runParsingErrorScenario() {
+          this.addEvent('scenario-start', 'Parsing error scenario started');
+          this.setScanError('parsing');
+        },
+        
+        async runFileUploadErrorScenario() {
+          this.addEvent('scenario-start', 'File upload error scenario started');
+          this.setScanError('file');
+        },
+        
+        async runAutoRetryScenario() {
+          this.addEvent('scenario-start', 'Auto retry scenario started');
+          this.autoRetryDelay = 2;
+          this.maxAutoRetries = 2;
+          this.setCameraError('in-use');
+        },
+        
+        async runErrorRecoveryScenario() {
+          this.addEvent('scenario-start', 'Error recovery scenario started');
+          
+          // Multiple error sequence
+          this.setCameraError('permission');
+          
+          setTimeout(() => {
+            this.clearAllErrors();
+            this.setScanError('no-results');
+          }, 3000);
+          
+          setTimeout(() => {
+            this.clearAllErrors();
+            this.addEvent('scenario-end', 'Error recovery completed successfully');
+          }, 6000);
+        },
+        
+        // Event logging
+        addEvent(type, message) {
+          this.eventLog.push({
+            timestamp: new Date().toLocaleTimeString(),
+            type,
+            message
+          });
+          
+          // Keep only last 50 events
+          if(this.eventLog.length > 50) {
+            this.eventLog = this.eventLog.slice(-50);
+          }
+        }
+      }
+    }).mount('#app');
+  </script>
+
+  <!-- Include the ErrorDisplayComponent styles -->
+  <style>
+  /* Error Display Component Styles */
+  .error-display-container {
+    z-index: 1500;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
+  .error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .error-inline {
+    position: relative;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    margin: 10px 0;
+  }
+
+  .error-position-center { align-items: center; justify-content: center; }
+  .error-position-top { align-items: flex-start; justify-content: center; padding-top: 10%; }
+  .error-position-bottom { align-items: flex-end; justify-content: center; padding-bottom: 10%; }
+
+  .error-content {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: errorSlideIn 0.3s ease-out;
+  }
+
+  .error-inline .error-content {
+    background: transparent;
+    box-shadow: none;
+    padding: 20px;
+  }
+
+  .camera-error { border-top: 4px solid #dc2626; }
+  .scan-error { border-top: 4px solid #d97706; }
+
+  .error-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #dc2626;
+  }
+
+  .scan-error .error-icon { color: #d97706; }
+
+  .error-message { margin-bottom: 25px; }
+
+  .error-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 12px 0;
+  }
+
+  .error-description {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .action-button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    justify-content: center;
+  }
+
+  .action-button.primary {
+    background: #dc2626;
+    color: white;
+  }
+
+  .action-button.primary:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+  }
+
+  .action-button.secondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+
+  .action-button.secondary:hover { background: #e5e7eb; }
+
+  .auto-retry-indicator {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fef3c7;
+    border-radius: 8px;
+    color: #92400e;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .retry-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fcd34d;
+    border-top: 2px solid #92400e;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .help-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+  }
+
+  .help-modal {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease-out;
+  }
+
+  .help-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px 15px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .help-header h3 {
+    margin: 0;
+    color: #111827;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .help-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  .help-content { padding: 20px 25px 25px; }
+  .help-step { margin-bottom: 20px; }
+  .help-step strong { color: #111827; display: block; margin-bottom: 8px; }
+  .help-step ol, .help-step ul { margin: 0; padding-left: 20px; color: #4b5563; font-size: 14px; line-height: 1.5; }
+
+  @keyframes errorSlideIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes modalSlideIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  </style>
+</body>
+</html>
