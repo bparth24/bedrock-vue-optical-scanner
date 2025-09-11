@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tip Text Component Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+    }
+    
+    .demo-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .controls-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      height: fit-content;
+    }
+    
+    .mock-scanner-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      text-align: center;
+    }
+    
+    .scan-region {
+      position: absolute;
+      border: 3px solid #ffc107;
+      border-radius: 8px;
+      pointer-events: none;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+    
+    .control-group {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+    }
+    
+    .control-group h4 {
+      margin: 0 0 15px 0;
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+    
+    .control-item {
+      margin: 10px 0;
+    }
+    
+    .control-item label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .control-item select,
+    .control-item input[type="number"],
+    .control-item input[type="range"],
+    .control-item textarea {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      width: 100%;
+      font-family: inherit;
+    }
+    
+    .control-item textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+    
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+      width: auto;
+    }
+    
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .test-button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      color: white;
+    }
+    
+    .test-button.primary {
+      background: #007bff;
+    }
+    
+    .test-button.primary:hover {
+      background: #0056b3;
+    }
+    
+    .test-button.success {
+      background: #28a745;
+    }
+    
+    .test-button.success:hover {
+      background: #218838;
+    }
+    
+    .test-button.warning {
+      background: #ffc107;
+      color: #212529;
+    }
+    
+    .test-button.warning:hover {
+      background: #e0a800;
+    }
+    
+    .test-button.danger {
+      background: #dc3545;
+    }
+    
+    .test-button.danger:hover {
+      background: #c82333;
+    }
+    
+    .test-button.secondary {
+      background: #6c757d;
+    }
+    
+    .test-button.secondary:hover {
+      background: #545b62;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 300px;
+      margin: 15px 0;
+    }
+    
+    .event-log {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .event-item {
+      margin: 3px 0;
+      padding: 3px 6px;
+      background: white;
+      border-radius: 3px;
+      border-left: 3px solid #007bff;
+    }
+    
+    .timestamp {
+      color: #666;
+      font-size: 11px;
+    }
+    
+    .range-display {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .range-value {
+      min-width: 50px;
+      text-align: center;
+      background: #e9ecef;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 1200px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .checkbox-group {
+        grid-template-columns: 1fr;
+      }
+      
+      .test-button {
+        padding: 12px 15px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <!-- Demo Area -->
+      <div class="demo-area">
+        <h1>TipTextComponent Test</h1>
+        
+        <!-- Mock Scanner Container with Tip Text -->
+        <div class="mock-scanner-container">
+          📱 Mock Scanner Interface<br>
+          <small>Tip text will appear positioned relative to this area</small>
+          
+          <!-- Scan Region Indicator -->
+          <div 
+            class="scan-region"
+            :style="{
+              left: regionLeft + '%',
+              top: regionTop + '%',
+              width: regionWidth + '%',
+              height: regionHeight + '%'
+            }">
+          </div>
+          
+          <!-- Tip Text Component -->
+          <tip-text-component
+            ref="tipText"
+            :tip-text="tipText"
+            :position="position"
+            :region-top="regionTop"
+            :visible="visible"
+            :custom-style="customStyle"
+            :show-icon="showIcon"
+            :show-arrow="showArrow"
+            :show-close-button="showCloseButton"
+            :auto-hide="autoHide"
+            :auto-hide-delay="autoHideDelay"
+            :animation="animation"
+            :theme="theme"
+            @hidden="onTipHidden"
+            @shown="onTipShown"
+            @clicked="onTipClicked" />
+        </div>
+      </div>
+      
+      <!-- Controls Area -->
+      <div class="controls-area">
+        <h2>Test Controls</h2>
+        
+        <!-- Quick Test Scenarios -->
+        <div class="control-group">
+          <h4>Quick Scenarios</h4>
+          <div class="button-grid">
+            <button class="test-button primary" @click="setDefaultScenario">
+              📱 Default Scanner Tip
+            </button>
+            <button class="test-button success" @click="setSuccessScenario">
+              ✅ Success Message
+            </button>
+            <button class="test-button warning" @click="setWarningScenario">
+              ⚠️ Warning Alert
+            </button>
+            <button class="test-button danger" @click="setErrorScenario">
+              ❌ Error Message
+            </button>
+            <button class="test-button secondary" @click="setCenterScenario">
+              🎯 Center Tip
+            </button>
+            <button class="test-button primary" @click="setCustomScenario">
+              🎨 Custom Position
+            </button>
+          </div>
+        </div>
+        
+        <!-- Tip Text Content -->
+        <div class="control-group">
+          <h4>Tip Content</h4>
+          
+          <div class="control-item">
+            <label>Tip Text (supports **bold**, *italic*, \n for breaks):</label>
+            <textarea v-model="tipText" placeholder="Enter your tip text..."></textarea>
+          </div>
+          
+          <div class="control-item">
+            <label>
+              <input type="checkbox" v-model="visible">
+              Visible
+            </label>
+          </div>
+        </div>
+        
+        <!-- Position & Layout -->
+        <div class="control-group">
+          <h4>Position & Layout</h4>
+          
+          <div class="control-item">
+            <label>Position:</label>
+            <select v-model="position">
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
+              <option value="center">Center</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          
+          <div class="control-item">
+            <label>Scan Region Top: {{ regionTop }}%</label>
+            <div class="range-display">
+              <input type="range" v-model.number="regionTop" min="10" max="80" step="5">
+              <span class="range-value">{{ regionTop }}%</span>
+            </div>
+          </div>
+          
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="showIcon">
+              <label>Show Icon</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="showArrow">
+              <label>Show Arrow</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="showCloseButton">
+              <label>Close Button</label>
+            </div>
+            <div class="checkbox-item">
+              <input type="checkbox" v-model="autoHide">
+              <label>Auto Hide</label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Styling & Animation -->
+        <div class="control-group">
+          <h4>Styling & Animation</h4>
+          
+          <div class="control-item">
+            <label>Theme:</label>
+            <select v-model="theme">
+              <option value="default">Default</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
+              <option value="success">Success</option>
+            </select>
+          </div>
+          
+          <div class="control-item">
+            <label>Animation:</label>
+            <select v-model="animation">
+              <option value="fade">Fade</option>
+              <option value="slide">Slide</option>
+              <option value="bounce">Bounce</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          
+          <div class="control-item" v-if="autoHide">
+            <label>Auto Hide Delay: {{ autoHideDelay }}ms</label>
+            <div class="range-display">
+              <input type="range" v-model.number="autoHideDelay" min="1000" max="10000" step="500">
+              <span class="range-value">{{ autoHideDelay }}ms</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="control-group">
+          <h4>Actions</h4>
+          <div class="button-grid">
+            <button class="test-button primary" @click="showTip">
+              👁️ Show Tip
+            </button>
+            <button class="test-button secondary" @click="hideTip">
+              🙈 Hide Tip
+            </button>
+            <button class="test-button warning" @click="toggleVisibility">
+              🔄 Toggle
+            </button>
+            <button class="test-button danger" @click="resetToDefaults">
+              🔄 Reset
+            </button>
+          </div>
+        </div>
+        
+        <!-- Component State -->
+        <div class="control-group">
+          <h4>Component State</h4>
+          <div class="state-display">
+            Position: {{ position }}<br>
+            Theme: {{ theme }}<br>
+            Visible: {{ visible }}<br>
+            Region Top: {{ regionTop }}%<br>
+            Auto Hide: {{ autoHide }}<br>
+            Show Icon: {{ showIcon }}<br>
+            Show Arrow: {{ showArrow }}<br>
+            Animation: {{ animation }}
+          </div>
+        </div>
+        
+        <!-- Event Log -->
+        <div class="control-group">
+          <h4>Event Log</h4>
+          <div class="event-log">
+            <div v-for="(event, index) in eventLog.slice(-10)" :key="index" class="event-item">
+              <div class="timestamp">{{ event.timestamp }}</div>
+              <strong>{{ event.type }}</strong>: {{ event.data }}
+            </div>
+            <div v-if="eventLog.length === 0" style="color: #666; text-align: center; padding: 20px;">
+              No events yet...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock TipTextComponent (simplified version for testing)
+    const TipTextComponent = {
+      name: 'TipTextComponent',
+      template: `
+        <div
+          v-if="visible && tipText"
+          ref="tipContainer"
+          :class="['tip-text-container', positionClass, animationClass]"
+          :style="computedStyle"
+          @click="onTipClick">
+          
+          <!-- Tip Text Content -->
+          <div class="tip-text-content">
+            <!-- Icon (optional) -->
+            <div v-if="showIcon" class="tip-icon">
+              {{ getPositionIcon() }}
+            </div>
+            
+            <!-- Text Content -->
+            <div class="tip-text" v-html="formattedText"></div>
+            
+            <!-- Optional close button for persistent tips -->
+            <button
+              v-if="showCloseButton"
+              @click.stop="hideTip"
+              class="tip-close-button"
+              title="Close tip">
+              ✕
+            </button>
+          </div>
+          
+          <!-- Tip Arrow (for positioned tips) -->
+          <div v-if="showArrow" class="tip-arrow"></div>
+        </div>
+      `,
+      props: {
+        tipText: { type: String, default: '' },
+        position: { type: String, default: 'bottom' },
+        regionTop: { type: Number, default: null },
+        visible: { type: Boolean, default: true },
+        customStyle: { type: Object, default: () => ({}) },
+        showIcon: { type: Boolean, default: false },
+        showArrow: { type: Boolean, default: false },
+        showCloseButton: { type: Boolean, default: false },
+        autoHide: { type: Boolean, default: false },
+        autoHideDelay: { type: Number, default: 5000 },
+        animation: { type: String, default: 'fade' },
+        theme: { type: String, default: 'default' }
+      },
+      emits: ['hidden', 'shown', 'clicked'],
+      data() {
+        return {
+          isManuallyHidden: false,
+          autoHideTimer: null
+        };
+      },
+      computed: {
+        formattedText() {
+          if (!this.tipText) return '';
+          return this.tipText
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\\n/g, '<br>');
+        },
+        
+        positionClass() {
+          return `tip-position-${this.position}`;
+        },
+        
+        animationClass() {
+          return `animation-${this.animation}`;
+        },
+        
+        computedStyle() {
+          const style = { ...this.customStyle };
+          
+          if (this.position === 'bottom' && this.regionTop !== null) {
+            style.bottom = `calc(${this.regionTop}% - 30px)`;
+            style.position = 'absolute';
+            style.left = '50%';
+            style.transform = 'translateX(-50%)';
+          } else if (this.position === 'top' && this.regionTop !== null) {
+            style.top = `calc(${100 - this.regionTop}% + 30px)`;
+            style.position = 'absolute';
+            style.left = '50%';
+            style.transform = 'translateX(-50%)';
+          } else if (this.position === 'center') {
+            style.position = 'absolute';
+            style.top = '50%';
+            style.left = '50%';
+            style.transform = 'translate(-50%, -50%)';
+          } else if (this.position === 'custom') {
+            style.position = style.position || 'absolute';
+          } else {
+            style.position = 'absolute';
+            style.bottom = '20px';
+            style.left = '50%';
+            style.transform = 'translateX(-50%)';
+          }
+          
+          const themeStyles = this.getThemeStyles();
+          Object.assign(style, themeStyles);
+          
+          return style;
+        }
+      },
+      watch: {
+        visible(isVisible) {
+          if (isVisible && !this.isManuallyHidden) {
+            this.$emit('shown');
+            if (this.autoHide) {
+              this.startAutoHideTimer();
+            }
+          }
+        }
+      },
+      methods: {
+        getPositionIcon() {
+          const iconMap = {
+            'top': '↑',
+            'bottom': '↓',
+            'center': '●',
+            'custom': '📍'
+          };
+          return iconMap[this.position] || '💡';
+        },
+        
+        getThemeStyles() {
+          const themes = {
+            default: {
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              color: 'white',
+              borderColor: 'transparent'
+            },
+            dark: {
+              backgroundColor: 'rgba(33, 37, 41, 0.95)',
+              color: '#f8f9fa',
+              borderColor: '#495057'
+            },
+            light: {
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              color: '#212529',
+              borderColor: '#dee2e6',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+            },
+            warning: {
+              backgroundColor: 'rgba(255, 193, 7, 0.95)',
+              color: '#212529',
+              borderColor: '#ffc107'
+            },
+            error: {
+              backgroundColor: 'rgba(220, 53, 69, 0.95)',
+              color: 'white',
+              borderColor: '#dc3545'
+            },
+            success: {
+              backgroundColor: 'rgba(40, 167, 69, 0.95)',
+              color: 'white',
+              borderColor: '#28a745'
+            }
+          };
+          return themes[this.theme] || themes.default;
+        },
+        
+        hideTip() {
+          this.isManuallyHidden = true;
+          this.clearAutoHideTimer();
+          this.$emit('hidden');
+        },
+        
+        onTipClick() {
+          this.$emit('clicked');
+        },
+        
+        startAutoHideTimer() {
+          if (this.autoHideTimer) return;
+          this.autoHideTimer = setTimeout(() => {
+            this.hideTip();
+          }, this.autoHideDelay);
+        },
+        
+        clearAutoHideTimer() {
+          if (this.autoHideTimer) {
+            clearTimeout(this.autoHideTimer);
+            this.autoHideTimer = null;
+          }
+        }
+      },
+      beforeUnmount() {
+        this.clearAutoHideTimer();
+      }
+    };
+
+    // Vue App
+    const { createApp } = Vue;
+    
+    createApp({
+      components: {
+        TipTextComponent
+      },
+      data() {
+        return {
+          // Component props
+          tipText: 'Scan barcode on the back of license',
+          position: 'bottom',
+          regionTop: 25,
+          visible: true,
+          customStyle: {},
+          showIcon: false,
+          showArrow: false,
+          showCloseButton: false,
+          autoHide: false,
+          autoHideDelay: 5000,
+          animation: 'fade',
+          theme: 'default',
+          
+          // Demo state
+          regionLeft: 15,
+          regionWidth: 70,
+          regionHeight: 50,
+          eventLog: []
+        };
+      },
+      methods: {
+        // Event handlers
+        onTipHidden() {
+          this.addEvent('hidden', 'Tip was hidden');
+        },
+        
+        onTipShown() {
+          this.addEvent('shown', 'Tip was shown');
+        },
+        
+        onTipClicked() {
+          this.addEvent('clicked', 'Tip was clicked');
+        },
+        
+        // Quick scenarios
+        setDefaultScenario() {
+          Object.assign(this, {
+            tipText: 'Scan barcode on the back of license',
+            position: 'bottom',
+            theme: 'default',
+            regionTop: 25,
+            showIcon: false,
+            showArrow: false,
+            autoHide: false,
+            visible: true
+          });
+          this.addEvent('scenario', 'Default scanner tip');
+        },
+        
+        setSuccessScenario() {
+          Object.assign(this, {
+            tipText: '**Success!** Barcode scanned successfully',
+            position: 'center',
+            theme: 'success',
+            showIcon: true,
+            showArrow: false,
+            autoHide: true,
+            autoHideDelay: 3000,
+            visible: true
+          });
+          this.addEvent('scenario', 'Success message');
+        },
+        
+        setWarningScenario() {
+          Object.assign(this, {
+            tipText: '⚠️ **Warning:** Hold camera steady for better results',
+            position: 'top',
+            theme: 'warning',
+            showIcon: true,
+            showArrow: true,
+            autoHide: false,
+            showCloseButton: true,
+            visible: true
+          });
+          this.addEvent('scenario', 'Warning alert');
+        },
+        
+        setErrorScenario() {
+          Object.assign(this, {
+            tipText: '**Error:** Camera not found\\nPlease check your device permissions',
+            position: 'center',
+            theme: 'error',
+            showIcon: true,
+            showCloseButton: true,
+            autoHide: false,
+            visible: true
+          });
+          this.addEvent('scenario', 'Error message');
+        },
+        
+        setCenterScenario() {
+          Object.assign(this, {
+            tipText: '*Hold your device steady*\\nAlign the code within the frame',
+            position: 'center',
+            theme: 'light',
+            showIcon: true,
+            showArrow: false,
+            autoHide: true,
+            autoHideDelay: 7000,
+            visible: true
+          });
+          this.addEvent('scenario', 'Center guidance tip');
+        },
+        
+        setCustomScenario() {
+          Object.assign(this, {
+            tipText: '🎨 **Custom positioned tip**\\nI can be placed anywhere!',
+            position: 'custom',
+            theme: 'dark',
+            customStyle: {
+              top: '10px',
+              right: '20px',
+              transform: 'none'
+            },
+            showIcon: true,
+            showCloseButton: true,
+            visible: true
+          });
+          this.addEvent('scenario', 'Custom positioning');
+        },
+        
+        // Actions
+        showTip() {
+          this.visible = true;
+          this.addEvent('action', 'Show tip triggered');
+        },
+        
+        hideTip() {
+          this.visible = false;
+          this.addEvent('action', 'Hide tip triggered');
+        },
+        
+        toggleVisibility() {
+          this.visible = !this.visible;
+          this.addEvent('action', `Visibility toggled to ${this.visible}`);
+        },
+        
+        resetToDefaults() {
+          Object.assign(this, {
+            tipText: 'Scan barcode on the back of license',
+            position: 'bottom',
+            regionTop: 25,
+            visible: true,
+            customStyle: {},
+            showIcon: false,
+            showArrow: false,
+            showCloseButton: false,
+            autoHide: false,
+            autoHideDelay: 5000,
+            animation: 'fade',
+            theme: 'default'
+          });
+          this.addEvent('action', 'Reset to defaults');
+        },
+        
+        // Helper methods
+        addEvent(type, data) {
+          this.eventLog.push({
+            type: type,
+            data: data,
+            timestamp: new Date().toLocaleTimeString()
+          });
+          
+          // Keep only last 50 events
+          if (this.eventLog.length > 50) {
+            this.eventLog = this.eventLog.slice(-50);
+          }
+        }
+      }
+    }).mount('#app');
+  </script>
+
+  <!-- Include the TipTextComponent styles -->
+  <style>
+    /* TipTextComponent Styles */
+    .tip-text-container {
+      z-index: 1000;
+      pointer-events: auto;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 90vw;
+      word-wrap: break-word;
+      animation-duration: 0.3s;
+      animation-fill-mode: both;
+    }
+
+    .tip-text-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .tip-text-content:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .tip-icon {
+      font-size: 16px;
+      opacity: 0.9;
+      flex-shrink: 0;
+    }
+
+    .tip-text {
+      font-size: 14px;
+      line-height: 1.4;
+      text-align: center;
+      flex: 1;
+    }
+
+    .tip-close-button {
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+      flex-shrink: 0;
+      margin-left: 4px;
+    }
+
+    .tip-close-button:hover {
+      opacity: 1;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Tip Arrow */
+    .tip-arrow {
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-style: solid;
+    }
+
+    .tip-position-top .tip-arrow {
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 8px 8px 0 8px;
+      border-color: currentColor transparent transparent transparent;
+    }
+
+    .tip-position-bottom .tip-arrow {
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 0 8px 8px 8px;
+      border-color: transparent transparent currentColor transparent;
+    }
+
+    /* Animation Classes */
+    .tip-text-container {
+      animation-name: tipFadeIn;
+    }
+
+    @keyframes tipFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .tip-position-bottom.tip-text-container {
+      animation-name: tipSlideUp;
+    }
+
+    @keyframes tipSlideUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .tip-position-top.tip-text-container {
+      animation-name: tipSlideDown;
+    }
+
+    @keyframes tipSlideDown {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    .animation-bounce {
+      animation-name: tipBounceIn !important;
+      animation-duration: 0.5s;
+    }
+
+    @keyframes tipBounceIn {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.3);
+      }
+      50% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.05);
+      }
+      70% {
+        transform: translateX(-50%) scale(0.9);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+    }
+
+    .animation-none {
+      animation: none !important;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+      .tip-text-container {
+        max-width: 95vw;
+      }
+      
+      .tip-text-content {
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+      
+      .tip-text {
+        font-size: 13px;
+        line-height: 1.3;
+      }
+      
+      .tip-icon {
+        font-size: 14px;
+      }
+    }
+  </style>
+</body>
+</html>
