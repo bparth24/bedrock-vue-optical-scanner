@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results Display Component Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+    }
+    
+    .demo-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .controls-area {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      height: fit-content;
+    }
+    
+    .results-wrapper {
+      width: 100%;
+      margin: 20px 0;
+    }
+    
+    .control-group {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+    }
+    
+    .control-group h4 {
+      margin: 0 0 15px 0;
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+    
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    
+    .test-button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    
+    .test-button.qr {
+      background: #28a745;
+      color: white;
+    }
+    
+    .test-button.qr:hover {
+      background: #218838;
+    }
+    
+    .test-button.pdf417 {
+      background: #007bff;
+      color: white;
+    }
+    
+    .test-button.pdf417:hover {
+      background: #0056b3;
+    }
+    
+    .test-button.dl {
+      background: #6f42c1;
+      color: white;
+    }
+    
+    .test-button.dl:hover {
+      background: #5a32a3;
+    }
+    
+    .test-button.mrz {
+      background: #fd7e14;
+      color: white;
+    }
+    
+    .test-button.mrz:hover {
+      background: #e8650e;
+    }
+    
+    .test-button.action {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .test-button.action:hover {
+      background: #c82333;
+    }
+    
+    .control-item {
+      margin: 10px 0;
+    }
+    
+    .control-item label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .control-item select,
+    .control-item input[type="number"],
+    .control-item input[type="checkbox"] {
+      padding: 6px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+    }
+    
+    .control-item select {
+      width: 100%;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 400px;
+      margin: 15px 0;
+    }
+    
+    .event-log {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .event-item {
+      margin: 3px 0;
+      padding: 3px 6px;
+      background: white;
+      border-radius: 3px;
+      border-left: 3px solid #007bff;
+    }
+    
+    .timestamp {
+      color: #666;
+      font-size: 11px;
+    }
+    
+    @media (max-width: 1200px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .button-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .test-button {
+        padding: 12px 15px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <!-- Demo Area -->
+      <div class="demo-area">
+        <h1>ResultsDisplayComponent Test</h1>
+        
+        <!-- Results Display Component -->
+        <div class="results-wrapper">
+          <results-display-component
+            ref="resultsDisplay"
+            :results="results"
+            :dl-info="dlInfo"
+            :format="displayFormat"
+            :show-clear-button="showClearButton"
+            :max-results="maxResults"
+            @result-selected="onResultSelected"
+            @clear-results="onClearResults"
+            @export-requested="onExportRequested" />
+        </div>
+      </div>
+      
+      <!-- Controls Area -->
+      <div class="controls-area">
+        <h2>Test Controls</h2>
+        
+        <!-- Add Test Results -->
+        <div class="control-group">
+          <h4>Add Test Results</h4>
+          <div class="button-grid">
+            <button class="test-button qr" @click="addQRResult">
+              📱 Add QR Code
+            </button>
+            <button class="test-button pdf417" @click="addPDF417Result">
+              📊 Add PDF417
+            </button>
+            <button class="test-button dl" @click="addDriverLicenseResult">
+              🪪 Add Driver License
+            </button>
+            <button class="test-button mrz" @click="addMRZResult">
+              🆔 Add MRZ Document
+            </button>
+            <button class="test-button qr" @click="addBarcodeResult">
+              🏷️ Add Barcode
+            </button>
+            <button class="test-button pdf417" @click="addLongTextResult">
+              📄 Add Long Text
+            </button>
+          </div>
+        </div>
+        
+        <!-- Bulk Actions -->
+        <div class="control-group">
+          <h4>Bulk Actions</h4>
+          <div class="button-grid">
+            <button class="test-button action" @click="addMultipleResults">
+              📚 Add 5 Results
+            </button>
+            <button class="test-button action" @click="clearAllResults">
+              🗑️ Clear All
+            </button>
+            <button class="test-button action" @click="addComplexDL">
+              🎯 Complex DL
+            </button>
+            <button class="test-button action" @click="addComplexMRZ">
+              🎯 Complex MRZ
+            </button>
+          </div>
+        </div>
+        
+        <!-- Component Props -->
+        <div class="control-group">
+          <h4>Component Settings</h4>
+          
+          <div class="control-item">
+            <label>Display Format:</label>
+            <select v-model="displayFormat">
+              <option value="simple">Simple</option>
+              <option value="detailed">Detailed</option>
+              <option value="raw">Raw Data</option>
+            </select>
+          </div>
+          
+          <div class="control-item">
+            <label>Max Results:</label>
+            <input type="number" v-model.number="maxResults" min="1" max="50">
+          </div>
+          
+          <div class="control-item">
+            <label>
+              <input type="checkbox" v-model="showClearButton">
+              Show Clear Button
+            </label>
+          </div>
+        </div>
+        
+        <!-- Component State -->
+        <div class="control-group">
+          <h4>Component State</h4>
+          <div class="state-display">
+            Results Count: {{ results.length }}<br>
+            Display Format: {{ displayFormat }}<br>
+            Max Results: {{ maxResults }}<br>
+            Show Clear: {{ showClearButton }}<br>
+            Selected Index: {{ selectedIndex }}
+          </div>
+        </div>
+        
+        <!-- Event Log -->
+        <div class="control-group">
+          <h4>Event Log</h4>
+          <div class="event-log">
+            <div v-for="(event, index) in eventLog.slice(-10)" :key="index" class="event-item">
+              <div class="timestamp">{{ event.timestamp }}</div>
+              <strong>{{ event.type }}</strong>: {{ event.data }}
+            </div>
+            <div v-if="eventLog.length === 0" style="color: #666; text-align: center; padding: 20px;">
+              No events yet...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Mock ResultsDisplayComponent
+    const ResultsDisplayComponent = {
+      name: 'ResultsDisplayComponent',
+      template: `
+        <div class="results-display-container">
+          <!-- Header Section -->
+          <div class="results-header">
+            <h3 class="results-title">
+              <span class="results-icon">📋</span>
+              Scan Results
+              <span v-if="results.length > 0" class="results-count">({{ results.length }})</span>
+            </h3>
+            
+            <!-- Header Controls -->
+            <div class="header-controls">
+              <!-- Format Selector -->
+              <div class="format-selector">
+                <label for="display-format">View:</label>
+                <select 
+                  id="display-format"
+                  :value="format" 
+                  @change="$emit('format-changed', $event.target.value)"
+                  class="format-select">
+                  <option value="simple">Simple</option>
+                  <option value="detailed">Detailed</option>
+                  <option value="raw">Raw Data</option>
+                </select>
+              </div>
+              
+              <!-- Action Buttons -->
+              <div class="action-buttons">
+                <button 
+                  v-if="results.length > 0"
+                  @click="exportResults"
+                  class="action-button export-button"
+                  title="Export Results">
+                  <span class="button-icon">📤</span>
+                  Export
+                </button>
+                
+                <button 
+                  v-if="showClearButton && results.length > 0"
+                  @click="clearResults"
+                  class="action-button clear-button"
+                  title="Clear All Results">
+                  <span class="button-icon">🗑️</span>
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Content -->
+          <div class="results-content">
+            <!-- No Results State -->
+            <div v-if="results.length === 0" class="no-results">
+              <div class="no-results-icon">🔍</div>
+              <div class="no-results-text">No scan results yet</div>
+              <div class="no-results-hint">Scan a QR code, barcode, or document to see results here</div>
+            </div>
+
+            <!-- Results List -->
+            <div v-else class="results-list">
+              <div 
+                v-for="(result, index) in displayedResults"
+                :key="'result-' + index"
+                :class="['result-item', { 'selected': selectedIndex === index }]"
+                @click="selectResult(result, index)">
+                
+                <!-- Result Header -->
+                <div class="result-header">
+                  <div class="result-meta">
+                    <span class="result-format">{{ getFormatDisplay(result.format) }}</span>
+                    <span class="result-timestamp">{{ formatTimestamp(result.timestamp) }}</span>
+                  </div>
+                  <div class="result-indicator">
+                    {{ getResultIcon(result.format) }}
+                  </div>
+                </div>
+
+                <!-- Result Content Based on Format -->
+                <div class="result-content">
+                  <!-- Simple Format -->
+                  <div v-if="format === 'simple'" class="simple-content">
+                    <div class="simple-text">{{ getSimpleText(result) }}</div>
+                  </div>
+
+                  <!-- Detailed Format -->
+                  <div v-else-if="format === 'detailed'" class="detailed-content">
+                    <!-- Driver License Display -->
+                    <div v-if="result.driverLicense" class="dl-details">
+                      <h4 class="dl-title">👤 Driver License Information</h4>
+                      <div class="dl-fields">
+                        <div 
+                          v-for="(field, key) in getDisplayFields(result.driverLicense)"
+                          :key="key"
+                          class="dl-field">
+                          <span class="field-label">{{ field.description }}:</span>
+                          <span class="field-value">{{ field.value }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- MRZ Display -->
+                    <div v-else-if="result.data && result.format === 'mrz'" class="mrz-details">
+                      <h4 class="mrz-title">🆔 Document Information</h4>
+                      <div class="mrz-fields">
+                        <div v-if="result.data.firstName || result.data.lastName" class="mrz-field">
+                          <span class="field-label">Name:</span>
+                          <span class="field-value">{{ result.data.firstName }} {{ result.data.lastName }}</span>
+                        </div>
+                        <div v-if="result.data.documentNumber" class="mrz-field">
+                          <span class="field-label">Document #:</span>
+                          <span class="field-value">{{ result.data.documentNumber }}</span>
+                        </div>
+                        <div v-if="result.data.dateOfBirth" class="mrz-field">
+                          <span class="field-label">Date of Birth:</span>
+                          <span class="field-value">{{ result.data.dateOfBirth }}</span>
+                        </div>
+                        <div v-if="result.data.nationality" class="mrz-field">
+                          <span class="field-label">Nationality:</span>
+                          <span class="field-value">{{ result.data.nationality }}</span>
+                        </div>
+                        
+                        <!-- Validation Info -->
+                        <div v-if="result.data.validation" class="validation-info">
+                          <h5 class="validation-title">✅ Validation</h5>
+                          <div class="validation-fields">
+                            <div class="validation-field">
+                              <span class="field-label">Status:</span>
+                              <span class="field-value">{{ result.data.validation.overallStatus?.toUpperCase() }}</span>
+                            </div>
+                            <div class="validation-field">
+                              <span class="field-label">Completeness:</span>
+                              <span class="field-value">{{ result.data.validation.statistics?.overallCompleteness }}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Standard Barcode Display -->
+                    <div v-else class="standard-details">
+                      <h4 class="standard-title">📄 Content</h4>
+                      <div class="standard-text">{{ result.text }}</div>
+                    </div>
+                  </div>
+
+                  <!-- Raw Format -->
+                  <div v-else-if="format === 'raw'" class="raw-content">
+                    <pre class="raw-text">{{ formatRawData(result) }}</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results Footer -->
+          <div v-if="results.length > maxResults" class="results-footer">
+            <div class="pagination-info">
+              Showing {{ maxResults }} of {{ results.length }} results
+            </div>
+          </div>
+        </div>
+      `,
+      props: {
+        results: { type: Array, default: () => [] },
+        dlInfo: { type: Object, default: null },
+        format: { type: String, default: 'detailed' },
+        showClearButton: { type: Boolean, default: true },
+        maxResults: { type: Number, default: 10 }
+      },
+      emits: ['result-selected', 'clear-results', 'export-requested'],
+      data() {
+        return {
+          selectedIndex: null
+        };
+      },
+      computed: {
+        displayedResults() {
+          const resultsToShow = this.results.slice(0, this.maxResults);
+          return resultsToShow.map((result, index) => ({
+            ...result,
+            timestamp: result.timestamp || Date.now() - (resultsToShow.length - index) * 1000
+          }));
+        }
+      },
+      methods: {
+        selectResult(result, index) {
+          this.selectedIndex = index;
+          this.$emit('result-selected', { result, index });
+        },
+        
+        clearResults() {
+          this.selectedIndex = null;
+          this.$emit('clear-results');
+        },
+        
+        exportResults() {
+          const exportData = {
+            results: this.results,
+            format: this.format,
+            exportedAt: new Date().toISOString()
+          };
+          this.$emit('export-requested', exportData);
+        },
+        
+        getFormatDisplay(format) {
+          const formatMap = {
+            'qr_code': 'QR Code',
+            'pdf417': 'PDF417',
+            'pdf417_enhanced': 'PDF417 Enhanced',
+            'mrz': 'MRZ',
+            'code128': 'Code 128',
+            'ean13': 'EAN-13'
+          };
+          return formatMap[format] || format?.toUpperCase() || 'Unknown';
+        },
+        
+        getResultIcon(format) {
+          const iconMap = {
+            'qr_code': '⚡',
+            'pdf417': '📊',
+            'pdf417_enhanced': '📊+',
+            'mrz': '🆔',
+            'code128': '📋',
+            'ean13': '🏷️'
+          };
+          return iconMap[format] || '📄';
+        },
+        
+        getSimpleText(result) {
+          if (result.driverLicense) {
+            const dl = result.driverLicense;
+            const firstName = dl.DAC?.value || '';
+            const lastName = dl.DCS?.value || '';
+            const licenseNum = dl.DAQ?.value || '';
+            
+            if (firstName && lastName) {
+              return firstName + ' ' + lastName + (licenseNum ? ' - ' + licenseNum : '');
+            }
+            return licenseNum || 'Driver License Data';
+          }
+          
+          if (result.data && result.format === 'mrz') {
+            const name = (result.data.firstName || '') + ' ' + (result.data.lastName || '');
+            const docNum = result.data.documentNumber || '';
+            return name.trim() || docNum || 'Document Data';
+          }
+          
+          const text = result.text || '';
+          return text.length > 50 ? text.substring(0, 50) + '...' : text;
+        },
+        
+        getDisplayFields(driverLicense) {
+          if (!driverLicense) return {};
+          
+          const fields = {};
+          const importantFields = ['DAC', 'DCS', 'DAQ', 'DBB', 'DBC', 'DBA', 'DAG', 'DAI', 'DAJ', 'DAK'];
+          
+          importantFields.forEach(key => {
+            if (driverLicense[key] && driverLicense[key].value) {
+              fields[key] = driverLicense[key];
+            }
+          });
+          
+          Object.keys(driverLicense).forEach(key => {
+            if (key !== 'raw' && !importantFields.includes(key) && driverLicense[key]?.value) {
+              fields[key] = driverLicense[key];
+            }
+          });
+          
+          return fields;
+        },
+        
+        formatTimestamp(timestamp) {
+          if (!timestamp) return '';
+          
+          const date = new Date(timestamp);
+          const now = new Date();
+          const diff = now - date;
+          
+          if (diff < 60000) return 'Just now';
+          if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+          if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+          return date.toLocaleDateString();
+        },
+        
+        formatRawData(result) {
+          return JSON.stringify(result, null, 2);
+        }
+      }
+    };
+
+    // Vue App
+    const { createApp } = Vue;
+    
+    createApp({
+      components: {
+        ResultsDisplayComponent
+      },
+      data() {
+        return {
+          // Component props
+          results: [],
+          dlInfo: null,
+          displayFormat: 'detailed',
+          showClearButton: true,
+          maxResults: 10,
+          
+          // Test state
+          selectedIndex: null,
+          eventLog: []
+        };
+      },
+      methods: {
+        // Event handlers
+        onResultSelected(data) {
+          this.selectedIndex = data.index;
+          this.addEvent('result-selected', `Result ${data.index}: ${data.result.format}`);
+        },
+        
+        onClearResults() {
+          this.results = [];
+          this.selectedIndex = null;
+          this.addEvent('clear-results', 'All results cleared');
+        },
+        
+        onExportRequested(data) {
+          this.addEvent('export-requested', `Format: ${data.format}, ${data.results.length} results`);
+          console.log('Export data:', data);
+        },
+        
+        // Test result generators
+        addQRResult() {
+          this.results.push({
+            format: 'qr_code',
+            text: 'https://example.com/qr-test-' + Date.now(),
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'QR Code result');
+        },
+        
+        addPDF417Result() {
+          this.results.push({
+            format: 'pdf417',
+            text: 'PDF417 barcode data: ' + Math.random().toString(36).substring(7),
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'PDF417 result');
+        },
+        
+        addDriverLicenseResult() {
+          this.results.push({
+            format: 'pdf417_enhanced',
+            text: 'Driver License Raw Data',
+            driverLicense: {
+              DAC: { description: 'Customer First Name', value: 'John' },
+              DCS: { description: 'Customer Last Name', value: 'Doe' },
+              DAQ: { description: 'Customer ID Number', value: 'D123456789' },
+              DBB: { description: 'Date of Birth', value: '01/15/1990' },
+              DBC: { description: 'Physical Description - Sex', value: 'M' },
+              DBA: { description: 'Document Expiration Date', value: '01/15/2028' },
+              DAG: { description: 'Address - Street 1', value: '123 Main St' },
+              DAI: { description: 'Address - City', value: 'Anytown' },
+              DAJ: { description: 'Address - Jurisdiction Code', value: 'CA' },
+              DAK: { description: 'Address - Postal Code', value: '90210' },
+              raw: 'Raw driver license data...'
+            },
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'Driver License result');
+        },
+        
+        addMRZResult() {
+          this.results.push({
+            format: 'mrz',
+            text: 'MRZ Raw Data',
+            data: {
+              firstName: 'Jane',
+              lastName: 'Smith',
+              documentNumber: 'P123456789',
+              dateOfBirth: '1985-03-22',
+              dateOfExpiry: '2030-03-22',
+              nationality: 'USA',
+              issuingState: 'USA',
+              validation: {
+                overallStatus: 'valid',
+                statistics: {
+                  overallCompleteness: 95,
+                  validFields: 18,
+                  totalFields: 19
+                }
+              }
+            },
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'MRZ result');
+        },
+        
+        addBarcodeResult() {
+          this.results.push({
+            format: 'ean13',
+            text: '1234567890123',
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'EAN-13 Barcode result');
+        },
+        
+        addLongTextResult() {
+          this.results.push({
+            format: 'qr_code',
+            text: 'This is a very long QR code content that should test the text wrapping and display capabilities of the results component. It contains multiple sentences and should demonstrate how longer content is handled in the different display formats available in the component.',
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'Long text QR result');
+        },
+        
+        addMultipleResults() {
+          const formats = ['qr_code', 'pdf417', 'ean13', 'code128'];
+          for (let i = 0; i < 5; i++) {
+            const format = formats[i % formats.length];
+            this.results.push({
+              format: format,
+              text: `Test ${format} result #${i + 1}`,
+              timestamp: Date.now() - (i * 1000)
+            });
+          }
+          this.addEvent('added', '5 mixed results');
+        },
+        
+        addComplexDL() {
+          this.results.push({
+            format: 'pdf417_enhanced',
+            text: 'Complex Driver License Raw Data',
+            driverLicense: {
+              DAC: { description: 'Customer First Name', value: 'Alexander' },
+              DCS: { description: 'Customer Last Name', value: 'Wellington-Smith' },
+              DAQ: { description: 'Customer ID Number', value: 'DL987654321' },
+              DBB: { description: 'Date of Birth', value: '12/25/1985' },
+              DBC: { description: 'Physical Description - Sex', value: 'M' },
+              DBA: { description: 'Document Expiration Date', value: '12/25/2029' },
+              DAY: { description: 'Physical Description - Eye Color', value: 'BLU' },
+              DAU: { description: 'Physical Description - Height', value: '072 in' },
+              DAW: { description: 'Weight(pounds)', value: '180' },
+              DAG: { description: 'Address - Street 1', value: '456 Oak Avenue Apt 12B' },
+              DAH: { description: 'Address - Street 2', value: 'Building C, Floor 3' },
+              DAI: { description: 'Address - City', value: 'San Francisco' },
+              DAJ: { description: 'Address - Jurisdiction Code', value: 'CA' },
+              DAK: { description: 'Address - Postal Code', value: '94102-1234' },
+              DCF: { description: 'Document Discriminator', value: 'ABC123DEF456' },
+              DCG: { description: 'Country Identification', value: 'USA' },
+              DCD: { description: 'Jurisdiction-specific endorsement codes', value: 'NONE' },
+              raw: 'Complex raw driver license data with many fields...'
+            },
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'Complex DL with many fields');
+        },
+        
+        addComplexMRZ() {
+          this.results.push({
+            format: 'mrz',
+            text: 'Complex MRZ Raw Data',
+            data: {
+              firstName: 'Maria Elena',
+              lastName: 'Rodriguez-Garcia',
+              documentNumber: 'P876543210',
+              dateOfBirth: '1992-07-15',
+              dateOfExpiry: '2032-07-15',
+              nationality: 'ESP',
+              issuingState: 'ESP',
+              sex: 'F',
+              documentType: 'P',
+              validation: {
+                overallStatus: 'warning',
+                statistics: {
+                  overallCompleteness: 88,
+                  validFields: 16,
+                  totalFields: 18
+                },
+                warnings: ['Minor checksum mismatch in field 3', 'Date format variation detected']
+              }
+            },
+            timestamp: Date.now()
+          });
+          this.addEvent('added', 'Complex MRZ with validation warnings');
+        },
+        
+        clearAllResults() {
+          this.results = [];
+          this.selectedIndex = null;
+          this.addEvent('cleared', 'All results cleared via control');
+        },
+        
+        // Helper methods
+        addEvent(type, data) {
+          this.eventLog.push({
+            type: type,
+            data: data,
+            timestamp: new Date().toLocaleTimeString()
+          });
+          
+          // Keep only last 50 events
+          if (this.eventLog.length > 50) {
+            this.eventLog = this.eventLog.slice(-50);
+          }
+        }
+      }
+    }).mount('#app');
+  </script>
+
+  <!-- Include the ResultsDisplayComponent styles -->
+  <style>
+    /* ResultsDisplayComponent Styles */
+    .results-display-container {
+      width: 100%;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .results-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .results-icon {
+      font-size: 20px;
+    }
+
+    .results-count {
+      font-size: 14px;
+      font-weight: 400;
+      color: #666;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .format-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .format-selector label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .format-select {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      background: #fff;
+      color: #333;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .export-button {
+      border-color: #28a745;
+      color: #28a745;
+    }
+
+    .export-button:hover {
+      background: #28a745;
+      color: white;
+    }
+
+    .clear-button {
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+
+    .clear-button:hover {
+      background: #dc3545;
+      color: white;
+    }
+
+    .results-content {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .no-results {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: #666;
+      text-align: center;
+    }
+
+    .no-results-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .no-results-text {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .no-results-hint {
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    .results-list {
+      padding: 0;
+    }
+
+    .result-item {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .result-item:hover {
+      background: #f8f9fa;
+    }
+
+    .result-item.selected {
+      background: #e3f2fd;
+      border-left: 4px solid #007bff;
+    }
+
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .result-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .result-format {
+      font-weight: 600;
+      color: #007bff;
+      font-size: 14px;
+    }
+
+    .result-timestamp {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .result-indicator {
+      font-size: 18px;
+    }
+
+    .simple-content {
+      padding: 8px 0;
+    }
+
+    .simple-text {
+      font-size: 16px;
+      color: #333;
+      word-break: break-word;
+    }
+
+    .detailed-content {
+      padding: 8px 0;
+    }
+
+    .dl-title,
+    .mrz-title,
+    .standard-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .dl-fields,
+    .mrz-fields {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dl-field,
+    .mrz-field {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .field-label {
+      font-weight: 500;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .field-value {
+      color: #333;
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .validation-info {
+      margin-top: 16px;
+      padding: 12px;
+      background: #f0f8f0;
+      border-radius: 6px;
+      border: 1px solid #d4edda;
+    }
+
+    .validation-title {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #155724;
+    }
+
+    .validation-fields {
+      display: grid;
+      gap: 4px;
+    }
+
+    .validation-field {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .standard-text {
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #333;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+
+    .raw-content {
+      padding: 8px 0;
+    }
+
+    .raw-text {
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      color: #333;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+    }
+
+    .results-footer {
+      padding: 12px 20px;
+      background: #f8f9fa;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</body>
+</html>
