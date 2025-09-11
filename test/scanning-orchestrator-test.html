@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanning Orchestrator Component Test</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .test-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .test-section h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover:not(:disabled) {
+      background: #0056b3;
+    }
+    
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    button.success { background: #28a745; }
+    button.warning { background: #ffc107; color: #212529; }
+    button.danger { background: #dc3545; }
+    
+    .mock-source {
+      width: 100%;
+      height: 150px;
+      background: #e9ecef;
+      border: 2px dashed #6c757d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 14px;
+      color: #6c757d;
+    }
+    
+    .mock-source.active {
+      background: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 600px;
+      white-space: pre-wrap;
+    }
+    
+    .event-log {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+      margin-top: 10px;
+    }
+    
+    .event-item {
+      padding: 4px 0;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .event-item:last-child {
+      border-bottom: none;
+    }
+    
+    .event-type {
+      font-weight: bold;
+      color: #007bff;
+    }
+    
+    .event-type.error { color: #dc3545; }
+    .event-type.result { color: #28a745; }
+    .event-type.progress { color: #ffc107; }
+    
+    select, input {
+      padding: 6px 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      margin: 2px;
+    }
+    
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 5px 0;
+    }
+    
+    .format-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    @media (max-width: 768px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <div class="controls-panel">
+        <h1>Scanning Orchestrator Component Test</h1>
+        
+        <!-- Source Management -->
+        <div class="test-section">
+          <h3>📷 Mock Source Control</h3>
+          <div class="mock-source" :class="{ active: currentSource }">
+            {{ currentSource ? `Source: ${currentSource.type}` : 'No Source Selected' }}
+          </div>
+          <div class="control-group">
+            <button @click="setVideoSource" :disabled="currentSource?.type === 'video'">
+              Video Element
+            </button>
+            <button @click="setImageSource" :disabled="currentSource?.type === 'image'">
+              Image Element
+            </button>
+            <button @click="setFileSource" :disabled="currentSource?.type === 'file'">
+              File Object
+            </button>
+            <button @click="clearSource" :disabled="!currentSource">
+              Clear Source
+            </button>
+          </div>
+        </div>
+        
+        <!-- Scanner Configuration -->
+        <div class="test-section">
+          <h3>⚙️ Scanner Configuration</h3>
+          <div>
+            <label>
+              <strong>Formats:</strong>
+            </label>
+            <div class="format-checkboxes">
+              <label v-for="format in availableFormats" :key="format">
+                <input 
+                  type="checkbox" 
+                  :value="format" 
+                  v-model="selectedFormats"
+                  :disabled="scanning">
+                {{ formatLabels[format] }}
+              </label>
+            </div>
+          </div>
+          
+          <div style="margin-top: 10px;">
+            <label>
+              <strong>Mode:</strong>
+              <select v-model="scanMode" :disabled="scanning">
+                <option value="first">First Match</option>
+                <option value="all">All Formats</option>
+                <option value="exhaustive">Exhaustive</option>
+              </select>
+            </label>
+          </div>
+          
+          <div>
+            <label>
+              <input type="checkbox" v-model="continuousMode" :disabled="scanning">
+              <strong>Continuous Scanning</strong>
+            </label>
+          </div>
+          
+          <div v-if="continuousMode">
+            <label>
+              <strong>Scan Interval:</strong>
+              <input 
+                type="number" 
+                v-model.number="scanInterval" 
+                min="100" 
+                max="5000" 
+                step="100"
+                :disabled="scanning">
+              ms
+            </label>
+          </div>
+        </div>
+        
+        <!-- Manual Controls -->
+        <div class="test-section">
+          <h3>🎮 Manual Controls</h3>
+          <div class="control-group">
+            <button 
+              @click="triggerScan" 
+              :disabled="!currentSource || scanning"
+              class="success">
+              🔍 Trigger Scan
+            </button>
+            <button 
+              @click="startContinuous" 
+              :disabled="!currentSource || scanning || continuousMode"
+              class="warning">
+              ▶️ Start Continuous
+            </button>
+            <button 
+              @click="stopContinuous" 
+              :disabled="!scanning && !continuousMode"
+              class="warning">
+              ⏹️ Stop Continuous
+            </button>
+            <button 
+              @click="abortScan" 
+              :disabled="!scanning"
+              class="danger">
+              ❌ Abort Scan
+            </button>
+          </div>
+        </div>
+        
+        <!-- Error Simulation -->
+        <div class="test-section">
+          <h3>💥 Error Simulation</h3>
+          <div class="control-group">
+            <button @click="simulateSuccess" class="success">
+              ✅ Simulate Success
+            </button>
+            <button @click="simulateNoResults" class="warning">
+              ❓ No Results
+            </button>
+            <button @click="simulateError" class="danger">
+              ❌ Scan Error
+            </button>
+            <button @click="simulateAbort" class="danger">
+              🚫 Abort Error
+            </button>
+          </div>
+        </div>
+        
+        <!-- Component State -->
+        <div class="test-section">
+          <h3>📊 Component State</h3>
+          <div class="state-display">{{ JSON.stringify(componentState, null, 2) }}</div>
+        </div>
+      </div>
+      
+      <!-- Event Log & Results -->
+      <div class="controls-panel">
+        <div class="test-section">
+          <h3>📋 Event Log</h3>
+          <button @click="clearEventLog" style="margin-bottom: 10px;">Clear Log</button>
+          <div class="event-log">
+            <div v-for="(event, index) in eventLog" :key="index" class="event-item">
+              <span class="event-type" :class="event.type">{{ event.type.toUpperCase() }}</span>
+              [{{ event.timestamp }}]: {{ event.message }}
+              <div v-if="event.data" style="margin-left: 20px; color: #6c757d;">
+                {{ JSON.stringify(event.data, null, 1) }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="test-section">
+          <h3>🎯 Scan Results</h3>
+          <div v-if="lastResults.length === 0" style="color: #6c757d; font-style: italic;">
+            No scan results yet...
+          </div>
+          <div v-else>
+            <div v-for="(result, index) in lastResults" :key="index" style="margin-bottom: 10px; padding: 10px; background: #e7f5e7; border-radius: 4px;">
+              <strong>Result {{ index + 1 }}:</strong><br>
+              <strong>Format:</strong> {{ result.format }}<br>
+              <strong>Text:</strong> {{ result.text }}<br>
+              <div v-if="result.boundingBox">
+                <strong>Bounds:</strong> {{ JSON.stringify(result.boundingBox) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- The Component Being Tested (Renderless) -->
+    <scanning-orchestrator-component
+      ref="orchestrator"
+      :source="currentSource"
+      :formats="selectedFormats"
+      :mode="scanMode"
+      :continuous="continuousMode"
+      :scan-interval="scanInterval"
+      :plugin-options="pluginOptions"
+      @result="onResult"
+      @error="onError"
+      @progress="onProgress"
+      @scan-complete="onScanComplete" />
+  </div>
+
+  <script type="module">
+    // Mock bedrock-web-optical-scanner
+    window.mockScannerBehavior = 'success'; // 'success', 'no-results', 'error', 'abort'
+    
+    const MockOpticalScanner = {
+      scan: async (source, options) => {
+        // Simulate scan delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Check for abort signal
+        if (options.signal?.aborted) {
+          const error = new Error('Scan aborted');
+          error.name = 'AbortError';
+          throw error;
+        }
+        
+        // Simulate different behaviors
+        switch (window.mockScannerBehavior) {
+          case 'success':
+            return [
+              { 
+                format: options.formats[0] || 'qr_code',
+                text: `Mock scan result from ${source.type || 'unknown'} source`,
+                boundingBox: { x: 10, y: 10, width: 100, height: 100 },
+                confidence: 0.95
+              }
+            ];
+          case 'no-results':
+            return [];
+          case 'error':
+            throw new Error('Mock scanning error');
+          case 'abort':
+            const abortError = new Error('Mock abort');
+            abortError.name = 'AbortError';
+            throw abortError;
+          default:
+            return [];
+        }
+      }
+    };
+    
+    // Mock plugins
+    const mockPlugin = { format: 'mock', scan: () => [] };
+    
+    // Mock ScanningOrchestratorComponent
+    const ScanningOrchestratorComponent = {
+      name: 'ScanningOrchestratorComponent',
+      props: {
+        source: { type: [Object], default: null },
+        formats: { type: Array, default: () => ['qr_code'] },
+        mode: { type: String, default: 'first' },
+        continuous: { type: Boolean, default: false },
+        scanInterval: { type: Number, default: 1000 },
+        pluginOptions: { type: Object, default: () => ({}) }
+      },
+      emits: ['result', 'error', 'progress', 'scan-complete'],
+      setup(props, { emit, expose }) {
+        const { ref, watch, onMounted, onUnmounted } = Vue;
+        
+        const scanning = ref(false);
+        let continuousTimer = null;
+        let abortController = null;
+        
+        const performScan = async (sourceOverride = null) => {
+          const scanSource = sourceOverride || props.source;
+          
+          if (!scanSource) {
+            emit('error', { error: new Error('No source'), source: null, type: 'no_source' });
+            return [];
+          }
+          
+          abortController = new AbortController();
+          
+          try {
+            scanning.value = true;
+            emit('progress', { scanning: true, format: props.formats[0] });
+            
+            const results = await MockOpticalScanner.scan(scanSource, {
+              formats: props.formats,
+              mode: props.mode,
+              signal: abortController.signal
+            });
+            
+            emit('result', { results, source: scanSource });
+            emit('scan-complete', { successful: true, resultCount: results.length });
+            
+            return results;
+          } catch (error) {
+            let errorType = 'scan_error';
+            if (error.name === 'AbortError') errorType = 'scan_aborted';
+            
+            emit('error', { error, source: scanSource, type: errorType });
+            emit('scan-complete', { successful: false, resultCount: 0 });
+            return [];
+          } finally {
+            scanning.value = false;
+            abortController = null;
+            emit('progress', { scanning: false, format: null });
+          }
+        };
+        
+        const startContinuous = () => {
+          if (continuousTimer) return;
+          continuousTimer = setInterval(() => {
+            if (props.source && !scanning.value) {
+              performScan();
+            }
+          }, props.scanInterval);
+        };
+        
+        const stopContinuous = () => {
+          if (continuousTimer) {
+            clearInterval(continuousTimer);
+            continuousTimer = null;
+          }
+        };
+        
+        const abortScan = () => {
+          if (abortController) {
+            abortController.abort();
+          }
+        };
+        
+        watch(() => props.continuous, (isContinuous) => {
+          if (isContinuous) {
+            startContinuous();
+          } else {
+            stopContinuous();
+          }
+        });
+        
+        watch(() => props.scanInterval, () => {
+          if (props.continuous) {
+            stopContinuous();
+            startContinuous();
+          }
+        });
+        
+        onUnmounted(() => {
+          stopContinuous();
+          abortScan();
+        });
+        
+        expose({
+          scan: performScan,
+          startContinuous,
+          stopContinuous,
+          abortScan
+        });
+        
+        return {};
+      },
+      template: '<div></div>' // Renderless
+    };
+    
+    // Vue App
+    const { createApp, ref, reactive, computed } = Vue;
+    
+    createApp({
+      components: {
+        ScanningOrchestratorComponent
+      },
+      setup() {
+        // State
+        const currentSource = ref(null);
+        const selectedFormats = ref(['qr_code']);
+        const scanMode = ref('first');
+        const continuousMode = ref(false);
+        const scanInterval = ref(1000);
+        const pluginOptions = reactive({});
+        const scanning = ref(false);
+        const eventLog = ref([]);
+        const lastResults = ref([]);
+        const orchestrator = ref(null);
+        
+        // Constants
+        const availableFormats = ['qr_code', 'pdf417', 'pdf417_enhanced', 'mrz'];
+        const formatLabels = {
+          'qr_code': 'QR Code',
+          'pdf417': 'PDF417',
+          'pdf417_enhanced': 'PDF417 Enhanced',
+          'mrz': 'MRZ'
+        };
+        
+        // Mock sources
+        const mockSources = {
+          video: { type: 'video', element: 'HTMLVideoElement' },
+          image: { type: 'image', element: 'HTMLImageElement' },
+          file: { type: 'file', name: 'test.jpg', size: 12345 }
+        };
+        
+        // Computed
+        const componentState = computed(() => ({
+          source: currentSource.value,
+          formats: selectedFormats.value,
+          mode: scanMode.value,
+          continuous: continuousMode.value,
+          scanInterval: scanInterval.value,
+          scanning: scanning.value
+        }));
+        
+        // Source management
+        const setVideoSource = () => currentSource.value = mockSources.video;
+        const setImageSource = () => currentSource.value = mockSources.image;
+        const setFileSource = () => currentSource.value = mockSources.file;
+        const clearSource = () => currentSource.value = null;
+        
+        // Manual controls
+        const triggerScan = () => orchestrator.value?.scan();
+        const startContinuous = () => orchestrator.value?.startContinuous();
+        const stopContinuous = () => orchestrator.value?.stopContinuous();
+        const abortScan = () => orchestrator.value?.abortScan();
+        
+        // Error simulation
+        const simulateSuccess = () => { window.mockScannerBehavior = 'success'; };
+        const simulateNoResults = () => { window.mockScannerBehavior = 'no-results'; };
+        const simulateError = () => { window.mockScannerBehavior = 'error'; };
+        const simulateAbort = () => { window.mockScannerBehavior = 'abort'; };
+        
+        // Event handlers
+        const addEvent = (type, message, data = null) => {
+          eventLog.value.unshift({
+            type,
+            message,
+            data,
+            timestamp: new Date().toLocaleTimeString()
+          });
+          
+          // Keep only last 50 events
+          if (eventLog.value.length > 50) {
+            eventLog.value = eventLog.value.slice(0, 50);
+          }
+        };
+        
+        const onResult = (event) => {
+          lastResults.value = event.results;
+          addEvent('result', `Scan successful: ${event.results.length} results`, event);
+        };
+        
+        const onError = (event) => {
+          addEvent('error', `Error (${event.type}): ${event.error.message}`, event);
+        };
+        
+        const onProgress = (event) => {
+          scanning.value = event.scanning;
+          addEvent('progress', `Scanning: ${event.scanning} (${event.format || 'none'})`, event);
+        };
+        
+        const onScanComplete = (event) => {
+          addEvent('scan-complete', `Scan complete: ${event.successful ? 'Success' : 'Failed'} (${event.resultCount} results)`, event);
+        };
+        
+        const clearEventLog = () => {
+          eventLog.value = [];
+        };
+        
+        return {
+          // State
+          currentSource,
+          selectedFormats,
+          scanMode,
+          continuousMode,
+          scanInterval,
+          pluginOptions,
+          scanning,
+          eventLog,
+          lastResults,
+          orchestrator,
+          
+          // Constants
+          availableFormats,
+          formatLabels,
+          
+          // Computed
+          componentState,
+          
+          // Methods
+          setVideoSource,
+          setImageSource,
+          setFileSource,
+          clearSource,
+          triggerScan,
+          startContinuous,
+          stopContinuous,
+          abortScan,
+          simulateSuccess,
+          simulateNoResults,
+          simulateError,
+          simulateAbort,
+          onResult,
+          onError,
+          onProgress,
+          onScanComplete,
+          clearEventLog
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>

@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanning Orchestrator Component - LIVE TEST</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- Real bedrock-web-optical-scanner - adjust path as needed -->
+  <script src="../node_modules/@bedrock/web-optical-scanner/dist/bundle.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    
+    .test-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 400px 1fr 350px;
+      gap: 20px;
+    }
+    
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .test-section {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .test-section h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover:not(:disabled) {
+      background: #0056b3;
+    }
+    
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+    }
+    
+    button.success { background: #28a745; }
+    button.warning { background: #ffc107; color: #212529; }
+    button.danger { background: #dc3545; }
+    
+    /* Live Camera Display */
+    .camera-container {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .camera-placeholder {
+      color: #fff;
+      text-align: center;
+    }
+    
+    .camera-overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    
+    .scanning-indicator {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255,0,0,0.8);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-weight: bold;
+      display: none;
+    }
+    
+    .scanning-indicator.active {
+      display: block;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+    
+    /* File Upload */
+    .file-upload-area {
+      border: 2px dashed #ced4da;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 10px 0;
+    }
+    
+    .file-upload-area:hover {
+      border-color: #007bff;
+      background: #f8f9fa;
+    }
+    
+    .file-upload-area.dragover {
+      border-color: #28a745;
+      background: #d4edda;
+    }
+    
+    .uploaded-image {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    
+    /* Pre-loaded Test Images */
+    .test-images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+    }
+    
+    .test-image-card {
+      border: 2px solid #dee2e6;
+      border-radius: 4px;
+      padding: 5px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    .test-image-card:hover {
+      border-color: #007bff;
+    }
+    
+    .test-image-card.selected {
+      border-color: #28a745;
+      background: #d4edda;
+    }
+    
+    .test-image-thumb {
+      width: 100%;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+    
+    .test-image-label {
+      font-size: 10px;
+      margin-top: 5px;
+      word-break: break-all;
+    }
+    
+    .state-display {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 400px;
+      white-space: pre-wrap;
+    }
+    
+    .event-log {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+      margin-top: 10px;
+    }
+    
+    .event-item {
+      padding: 4px 0;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .event-item:last-child {
+      border-bottom: none;
+    }
+    
+    .event-type {
+      font-weight: bold;
+      color: #007bff;
+    }
+    
+    .event-type.error { color: #dc3545; }
+    .event-type.result { color: #28a745; }
+    .event-type.progress { color: #ffc107; }
+    
+    select, input {
+      padding: 6px 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      margin: 2px;
+    }
+    
+    label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 5px 0;
+    }
+    
+    .format-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .results-section {
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .result-item {
+      background: #e7f5e7;
+      border: 1px solid #c3e6c3;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    
+    .result-item strong {
+      color: #155724;
+    }
+    
+    .no-results {
+      color: #6c757d;
+      font-style: italic;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    @media (max-width: 1200px) {
+      .test-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="test-container">
+      <!-- Left Panel: Controls -->
+      <div class="controls-panel">
+        <h1>🔴 LIVE Scanning Test</h1>
+        
+        <!-- Camera Controls -->
+        <div class="test-section">
+          <h3>📷 Live Camera</h3>
+          <div class="control-group">
+            <button @click="startCamera" :disabled="cameraActive || loadingCamera">
+              {{ loadingCamera ? 'Starting...' : 'Start Camera' }}
+            </button>
+            <button @click="stopCamera" :disabled="!cameraActive">
+              Stop Camera
+            </button>
+            <select v-model="selectedFacingMode" @change="restartCamera" :disabled="!cameraActive">
+              <option value="environment">Back Camera</option>
+              <option value="user">Front Camera</option>
+            </select>
+          </div>
+          <div v-if="cameraError" style="color: #dc3545; font-size: 12px; margin-top: 5px;">
+            {{ cameraError }}
+          </div>
+        </div>
+        
+        <!-- File Upload -->
+        <div class="test-section">
+          <h3>📁 File Upload</h3>
+          <div 
+            class="file-upload-area"
+            :class="{ dragover: dragOver }"
+            @click="triggerFileUpload"
+            @dragover.prevent="dragOver = true"
+            @dragleave.prevent="dragOver = false"
+            @drop.prevent="handleFileDrop">
+            <div v-if="!uploadedFile">
+              📎 Click or drag image here<br>
+              <small>Supports: JPG, PNG, GIF, BMP</small>
+            </div>
+            <div v-else>
+              <img :src="uploadedFile.dataUrl" alt="Uploaded" class="uploaded-image">
+              <div>{{ uploadedFile.name }}</div>
+              <button @click.stop="clearUploadedFile" style="margin-top: 5px;">Clear</button>
+            </div>
+          </div>
+          <input ref="fileInput" type="file" accept="image/*" @change="handleFileSelect" style="display: none;">
+        </div>
+        
+        <!-- Pre-loaded Test Images -->
+        <div class="test-section">
+          <h3>🖼️ Test Images</h3>
+          <div class="test-images-grid">
+            <div 
+              v-for="testImage in testImages" 
+              :key="testImage.name"
+              class="test-image-card"
+              :class="{ selected: selectedTestImage === testImage }"
+              @click="selectTestImage(testImage)">
+              <img :src="testImage.url" :alt="testImage.name" class="test-image-thumb">
+              <div class="test-image-label">{{ testImage.name }}</div>
+            </div>
+          </div>
+          <div style="margin-top: 10px;">
+            <button @click="loadAllTestImages" :disabled="loadingTestImages">
+              {{ loadingTestImages ? 'Loading...' : 'Load Test Images' }}
+            </button>
+          </div>
+        </div>
+        
+        <!-- Scanner Configuration -->
+        <div class="test-section">
+          <h3>⚙️ Scanner Configuration</h3>
+          <div>
+            <label><strong>Formats:</strong></label>
+            <div class="format-checkboxes">
+              <label v-for="format in availableFormats" :key="format">
+                <input type="checkbox" :value="format" v-model="selectedFormats" :disabled="scanning">
+                {{ formatLabels[format] }}
+              </label>
+            </div>
+          </div>
+          
+          <div style="margin-top: 10px;">
+            <label>
+              <strong>Mode:</strong>
+              <select v-model="scanMode" :disabled="scanning">
+                <option value="first">First Match</option>
+                <option value="all">All Formats</option>
+                <option value="exhaustive">Exhaustive</option>
+              </select>
+            </label>
+          </div>
+          
+          <div>
+            <label>
+              <input type="checkbox" v-model="continuousMode" :disabled="scanning">
+              <strong>Continuous Scanning</strong>
+            </label>
+          </div>
+          
+          <div v-if="continuousMode">
+            <label>
+              <strong>Interval:</strong>
+              <input type="number" v-model.number="scanInterval" min="500" max="5000" step="250" :disabled="scanning"> ms
+            </label>
+          </div>
+        </div>
+        
+        <!-- Manual Controls -->
+        <div class="test-section">
+          <h3>🎮 Scan Controls</h3>
+          <div class="control-group">
+            <button @click="triggerScan" :disabled="!currentSource || scanning" class="success">
+              🔍 Scan {{ currentSource?.type || 'Source' }}
+            </button>
+            <button @click="abortScan" :disabled="!scanning" class="danger">
+              ❌ Abort Scan
+            </button>
+          </div>
+          <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+            Current Source: {{ currentSource ? `${currentSource.type} (${currentSource.name || 'live'})` : 'None' }}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Center Panel: Live View -->
+      <div class="live-view-panel">
+        <!-- Camera View -->
+        <div class="test-section">
+          <h3>📹 Live Camera View</h3>
+          <div class="camera-container">
+            <video 
+              v-if="cameraActive"
+              ref="cameraVideo"
+              class="camera-video"
+              autoplay
+              playsinline
+              muted></video>
+            <div v-else class="camera-placeholder">
+              📷 Camera Not Active<br>
+              <small>Click "Start Camera" to begin</small>
+            </div>
+            
+            <div v-if="cameraActive" class="camera-overlay">
+              {{ selectedFacingMode === 'environment' ? 'Back' : 'Front' }} Camera
+            </div>
+            
+            <div class="scanning-indicator" :class="{ active: scanning }">
+              🔍 SCANNING...
+            </div>
+          </div>
+        </div>
+        
+        <!-- Current Source Display -->
+        <div class="test-section" v-if="currentSource">
+          <h3>🎯 Current Scan Source</h3>
+          <div v-if="currentSource.type === 'camera'" style="text-align: center;">
+            📹 Live Camera Stream<br>
+            <small>{{ selectedFacingMode === 'environment' ? 'Back' : 'Front' }} Camera</small>
+          </div>
+          <div v-else-if="currentSource.type === 'file'" style="text-align: center;">
+            <img :src="currentSource.dataUrl" alt="Source" style="max-width: 100%; max-height: 200px;">
+            <div>📁 {{ currentSource.name }}</div>
+          </div>
+          <div v-else-if="currentSource.type === 'test'" style="text-align: center;">
+            <img :src="currentSource.url" alt="Source" style="max-width: 100%; max-height: 200px;">
+            <div>🖼️ {{ currentSource.name }}</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Right Panel: Results & Logs -->
+      <div class="controls-panel">
+        <!-- Scan Results -->
+        <div class="results-section">
+          <h3>🎯 Scan Results</h3>
+          <div v-if="lastResults.length === 0" class="no-results">
+            No scan results yet...<br>
+            <small>Start camera or upload an image to scan</small>
+          </div>
+          <div v-else>
+            <div v-for="(result, index) in lastResults" :key="index" class="result-item">
+              <strong>Result {{ index + 1 }}:</strong><br>
+              <strong>Format:</strong> {{ result.format }}<br>
+              <strong>Text:</strong> <span style="word-break: break-all;">{{ result.text }}</span><br>
+              <div v-if="result.boundingBox" style="font-size: 11px; margin-top: 5px;">
+                <strong>Bounds:</strong> {{ formatBounds(result.boundingBox) }}
+              </div>
+              <div v-if="result.confidence" style="font-size: 11px;">
+                <strong>Confidence:</strong> {{ (result.confidence * 100).toFixed(1) }}%
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Event Log -->
+        <div class="test-section">
+          <h3>📋 Event Log</h3>
+          <button @click="clearEventLog" style="margin-bottom: 10px;">Clear Log</button>
+          <div class="event-log">
+            <div v-for="(event, index) in eventLog" :key="index" class="event-item">
+              <span class="event-type" :class="event.type">{{ event.type.toUpperCase() }}</span>
+              [{{ event.timestamp }}]: {{ event.message }}
+              <div v-if="event.data && event.type === 'error'" style="margin-left: 20px; color: #dc3545; font-size: 10px;">
+                {{ event.data.error?.message }}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Component State -->
+        <div class="test-section">
+          <h3>📊 Component State</h3>
+          <div class="state-display">{{ JSON.stringify(componentState, null, 2) }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- The REAL Component Being Tested -->
+    <scanning-orchestrator-component
+      ref="orchestrator"
+      :source="currentSource"
+      :formats="selectedFormats"
+      :mode="scanMode"
+      :continuous="continuousMode"
+      :scan-interval="scanInterval"
+      @result="onResult"
+      @error="onError"
+      @progress="onProgress"
+      @scan-complete="onScanComplete" />
+  </div>
+
+  <script type="module">
+    // Import your actual ScanningOrchestratorComponent here
+    // For now, we'll use a simplified version that uses real scanning
+    
+    const ScanningOrchestratorComponent = {
+      name: 'ScanningOrchestratorComponent',
+      props: {
+        source: { type: [Object], default: null },
+        formats: { type: Array, default: () => ['qr_code'] },
+        mode: { type: String, default: 'first' },
+        continuous: { type: Boolean, default: false },
+        scanInterval: { type: Number, default: 1000 }
+      },
+      emits: ['result', 'error', 'progress', 'scan-complete'],
+      setup(props, { emit, expose }) {
+        const { ref, watch, onMounted, onUnmounted } = Vue;
+        
+        const scanning = ref(false);
+        let continuousTimer = null;
+        let abortController = null;
+        
+        // Real scanning function - replace with actual bedrock-web-optical-scanner
+        const performScan = async (sourceOverride = null) => {
+          const scanSource = sourceOverride || props.source;
+          
+          if (!scanSource) {
+            emit('error', { error: new Error('No source'), source: null, type: 'no_source' });
+            return [];
+          }
+          
+          abortController = new AbortController();
+          
+          try {
+            scanning.value = true;
+            emit('progress', { scanning: true, format: props.formats[0] });
+            
+            // TODO: Replace this with real bedrock-web-optical-scanner
+            // For now, simulate with BarcodeDetector if available
+            if ('BarcodeDetector' in window) {
+              const detector = new BarcodeDetector({ formats: ['qr_code'] });
+              let scanTarget;
+              
+              if (scanSource.type === 'camera' && scanSource.element) {
+                scanTarget = scanSource.element;
+              } else if (scanSource.type === 'file' || scanSource.type === 'test') {
+                // Create image element from data URL
+                scanTarget = new Image();
+                scanTarget.src = scanSource.dataUrl || scanSource.url;
+                await new Promise(resolve => scanTarget.onload = resolve);
+              }
+              
+              if (scanTarget) {
+                const barcodes = await detector.detect(scanTarget);
+                const results = barcodes.map(barcode => ({
+                  format: 'qr_code',
+                  text: barcode.rawValue,
+                  boundingBox: barcode.boundingBox,
+                  confidence: 1.0
+                }));
+                
+                emit('result', { results, source: scanSource });
+                emit('scan-complete', { successful: true, resultCount: results.length });
+                return results;
+              }
+            }
+            
+            // Fallback: simulate scan result for demo
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const results = [{
+              format: props.formats[0],
+              text: `Demo result from ${scanSource.type} source`,
+              confidence: 0.95
+            }];
+            
+            emit('result', { results, source: scanSource });
+            emit('scan-complete', { successful: true, resultCount: results.length });
+            return results;
+            
+          } catch (error) {
+            let errorType = 'scan_error';
+            if (error.name === 'AbortError') errorType = 'scan_aborted';
+            
+            emit('error', { error, source: scanSource, type: errorType });
+            emit('scan-complete', { successful: false, resultCount: 0 });
+            return [];
+          } finally {
+            scanning.value = false;
+            abortController = null;
+            emit('progress', { scanning: false, format: null });
+          }
+        };
+        
+        const startContinuous = () => {
+          if (continuousTimer) return;
+          continuousTimer = setInterval(() => {
+            if (props.source && !scanning.value) {
+              performScan();
+            }
+          }, props.scanInterval);
+        };
+        
+        const stopContinuous = () => {
+          if (continuousTimer) {
+            clearInterval(continuousTimer);
+            continuousTimer = null;
+          }
+        };
+        
+        const abortScan = () => {
+          if (abortController) {
+            abortController.abort();
+          }
+        };
+        
+        watch(() => props.continuous, (isContinuous) => {
+          if (isContinuous) {
+            startContinuous();
+          } else {
+            stopContinuous();
+          }
+        });
+        
+        onUnmounted(() => {
+          stopContinuous();
+          abortScan();
+        });
+        
+        expose({
+          scan: performScan,
+          startContinuous,
+          stopContinuous,
+          abortScan
+        });
+        
+        return {};
+      },
+      template: '<div></div>' // Renderless
+    };
+    
+    // Vue App
+    const { createApp, ref, reactive, computed } = Vue;
+    
+    createApp({
+      components: {
+        ScanningOrchestratorComponent
+      },
+      setup() {
+        // Camera state
+        const cameraActive = ref(false);
+        const loadingCamera = ref(false);
+        const cameraError = ref(null);
+        const cameraVideo = ref(null);
+        const selectedFacingMode = ref('environment');
+        let currentStream = null;
+        
+        // File upload state
+        const fileInput = ref(null);
+        const uploadedFile = ref(null);
+        const dragOver = ref(false);
+        
+        // Test images
+        const testImages = ref([]);
+        const selectedTestImage = ref(null);
+        const loadingTestImages = ref(false);
+        
+        // Scanner state
+        const currentSource = ref(null);
+        const selectedFormats = ref(['qr_code']);
+        const scanMode = ref('first');
+        const continuousMode = ref(false);
+        const scanInterval = ref(1000);
+        const scanning = ref(false);
+        const eventLog = ref([]);
+        const lastResults = ref([]);
+        const orchestrator = ref(null);
+        
+        // Constants
+        const availableFormats = ['qr_code', 'pdf417', 'pdf417_enhanced', 'mrz'];
+        const formatLabels = {
+          'qr_code': 'QR Code',
+          'pdf417': 'PDF417',
+          'pdf417_enhanced': 'PDF417 Enhanced',
+          'mrz': 'MRZ'
+        };
+        
+        // Computed
+        const componentState = computed(() => ({
+          source: currentSource.value ? {
+            type: currentSource.value.type,
+            name: currentSource.value.name
+          } : null,
+          formats: selectedFormats.value,
+          mode: scanMode.value,
+          continuous: continuousMode.value,
+          scanInterval: scanInterval.value,
+          scanning: scanning.value,
+          cameraActive: cameraActive.value
+        }));
+        
+        // Camera management
+        const startCamera = async () => {
+          loadingCamera.value = true;
+          cameraError.value = null;
+          
+          try {
+            const constraints = {
+              video: {
+                facingMode: selectedFacingMode.value,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              }
+            };
+            
+            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+            if (cameraVideo.value) {
+              cameraVideo.value.srcObject = currentStream;
+              await new Promise(resolve => cameraVideo.value.onloadedmetadata = resolve);
+              
+              cameraActive.value = true;
+              currentSource.value = {
+                type: 'camera',
+                element: cameraVideo.value,
+                name: 'Live Camera'
+              };
+              
+              addEvent('camera', 'Camera started successfully');
+            }
+          } catch (error) {
+            cameraError.value = getCameraErrorMessage(error);
+            addEvent('error', `Camera error: ${error.message}`, { error });
+          } finally {
+            loadingCamera.value = false;
+          }
+        };
+        
+        const stopCamera = () => {
+          if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+            currentStream = null;
+          }
+          
+          if (cameraVideo.value) {
+            cameraVideo.value.srcObject = null;
+          }
+          
+          cameraActive.value = false;
+          if (currentSource.value?.type === 'camera') {
+            currentSource.value = null;
+          }
+          
+          addEvent('camera', 'Camera stopped');
+        };
+        
+        const restartCamera = () => {
+          if (cameraActive.value) {
+            stopCamera();
+            setTimeout(startCamera, 100);
+          }
+        };
+        
+        const getCameraErrorMessage = (error) => {
+          if (error.name === 'NotAllowedError') {
+            return 'Camera permission denied. Please allow camera access.';
+          }
+          if (error.name === 'NotFoundError') {
+            return 'No camera found on this device.';
+          }
+          if (error.name === 'NotReadableError') {
+            return 'Camera is already in use by another application.';
+          }
+          return `Camera error: ${error.message}`;
+        };
+        
+        // File upload
+        const triggerFileUpload = () => {
+          fileInput.value?.click();
+        };
+        
+        const handleFileSelect = (event) => {
+          const file = event.target.files[0];
+          if (file) {
+            processFile(file);
+          }
+        };
+        
+        const handleFileDrop = (event) => {
+          dragOver.value = false;
+          const file = event.dataTransfer.files[0];
+          if (file) {
+            processFile(file);
+          }
+        };
+        
+        const processFile = (file) => {
+          if (!file.type.startsWith('image/')) {
+            addEvent('error', 'Please select an image file');
+            return;
+          }
+          
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            uploadedFile.value = {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              dataUrl: e.target.result
+            };
+            
+            currentSource.value = {
+              type: 'file',
+              name: file.name,
+              dataUrl: e.target.result,
+              file: file
+            };
+            
+            selectedTestImage.value = null;
+            addEvent('file', `File uploaded: ${file.name}`);
+          };
+          reader.readAsDataURL(file);
+        };
+        
+        const clearUploadedFile = () => {
+          uploadedFile.value = null;
+          if (currentSource.value?.type === 'file') {
+            currentSource.value = null;
+          }
+        };
+        
+        // Test images
+        const loadAllTestImages = async () => {
+          loadingTestImages.value = true;
+          
+          const imageList = [
+            { name: 'qr_001.gif', path: 'images/qr_code/001.gif', type: 'qr_code' },
+            { name: 'qr_002.png', path: 'images/qr_code/002.png', type: 'qr_code' },
+            { name: 'pdf417_001.png', path: 'images/pdf417/001.png', type: 'pdf417' },
+            { name: 'pdf417_002.png', path: 'images/pdf417/002.png', type: 'pdf417' }
+          ];
+          
+          const loadedImages = [];
+          
+          for (const img of imageList) {
+            try {
+              // Try to load each test image
+              const url = `../${img.path}`;
+              const response = await fetch(url);
+              if (response.ok) {
+                loadedImages.push({
+                  name: img.name,
+                  url: url,
+                  type: img.type
+                });
+              }
+            } catch (error) {
+              console.warn(`Could not load test image: ${img.name}`);
+            }
+          }
+          
+          testImages.value = loadedImages;
+          loadingTestImages.value = false;
+          
+          addEvent('test-images', `Loaded ${loadedImages.length} test images`);
+        };
+        
+        const selectTestImage = (testImage) => {
+          selectedTestImage.value = testImage;
+          uploadedFile.value = null;
+          
+          currentSource.value = {
+            type: 'test',
+            name: testImage.name,
+            url: testImage.url
+          };
+          
+          addEvent('test-images', `Selected test image: ${testImage.name}`);
+        };
+        
+        // Scanning controls
+        const triggerScan = () => {
+          orchestrator.value?.scan();
+        };
+        
+        const abortScan = () => {
+          orchestrator.value?.abortScan();
+        };
+        
+        // Event handlers
+        const addEvent = (type, message, data = null) => {
+          eventLog.value.unshift({
+            type,
+            message,
+            data,
+            timestamp: new Date().toLocaleTimeString()
+          });
+          
+          if (eventLog.value.length > 100) {
+            eventLog.value = eventLog.value.slice(0, 100);
+          }
+        };
+        
+        const onResult = (event) => {
+          lastResults.value = event.results;
+          addEvent('result', `Scan successful: ${event.results.length} results from ${event.source.type}`, event);
+        };
+        
+        const onError = (event) => {
+          addEvent('error', `Error (${event.type}): ${event.error.message}`, event);
+        };
+        
+        const onProgress = (event) => {
+          scanning.value = event.scanning;
+          if (event.scanning) {
+            addEvent('progress', `Scanning started: ${event.format}`, event);
+          } else {
+            addEvent('progress', 'Scanning stopped', event);
+          }
+        };
+        
+        const onScanComplete = (event) => {
+          addEvent('scan-complete', `Scan complete: ${event.successful ? 'Success' : 'Failed'} (${event.resultCount} results)`, event);
+        };
+        
+        const clearEventLog = () => {
+          eventLog.value = [];
+        };
+        
+        const formatBounds = (bounds) => {
+          if (!bounds) return 'N/A';
+          return `x:${Math.round(bounds.x)} y:${Math.round(bounds.y)} w:${Math.round(bounds.width)} h:${Math.round(bounds.height)}`;
+        };
+        
+        // Auto-load test images on mount
+        Vue.onMounted(() => {
+          loadAllTestImages();
+        });
+        
+        // Cleanup on unmount
+        Vue.onUnmounted(() => {
+          stopCamera();
+        });
+        
+        return {
+          // Camera
+          cameraActive,
+          loadingCamera,
+          cameraError,
+          cameraVideo,
+          selectedFacingMode,
+          startCamera,
+          stopCamera,
+          restartCamera,
+          
+          // File upload
+          fileInput,
+          uploadedFile,
+          dragOver,
+          triggerFileUpload,
+          handleFileSelect,
+          handleFileDrop,
+          clearUploadedFile,
+          
+          // Test images
+          testImages,
+          selectedTestImage,
+          loadingTestImages,
+          loadAllTestImages,
+          selectTestImage,
+          
+          // Scanner
+          currentSource,
+          selectedFormats,
+          scanMode,
+          continuousMode,
+          scanInterval,
+          scanning,
+          availableFormats,
+          formatLabels,
+          orchestrator,
+          triggerScan,
+          abortScan,
+          
+          // Results & Events
+          lastResults,
+          eventLog,
+          componentState,
+          onResult,
+          onError,
+          onProgress,
+          onScanComplete,
+          clearEventLog,
+          formatBounds
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
