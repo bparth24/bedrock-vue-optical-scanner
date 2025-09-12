@@ -12,10 +12,12 @@
     "lib/*"
   ],
   "scripts": {
-    "lint": "eslint --ext .cjs,.js,.vue ."
+    "lint": "eslint --ext .cjs,.js,.vue .",
+    "lint:fix": "eslint --ext .cjs,.js,.vue . --fix"
   },
   "dependencies": {
-    "@bedrock/web-optical-scanner": "file:../bedrock-web-optical-scanner"
+    "@bedrock/web-optical-scanner": "file:../bedrock-web-optical-scanner",
+    "dompurify": "^3.2.6"
   },
   "peerDependencies": {
     "@bedrock/quasar": "^10.0.0",

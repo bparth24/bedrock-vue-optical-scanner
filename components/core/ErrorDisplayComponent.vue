@@ -3,103 +3,116 @@
     v-if="hasError"
     class="error-display-container"
     :class="containerClasses">
-    
     <!-- Camera Error Display -->
     <div
       v-if="cameraError"
       class="error-content camera-error">
-      
       <!-- Error Icon -->
       <div class="error-icon">
-        <i class="fas fa-video-slash" v-if="isCameraPermissionError"></i>
-        <i class="fas fa-exclamation-triangle" v-else></i>
+        <i
+          v-if="isCameraPermissionError"
+          class="fas fa-video-slash" />
+        <i
+          v-else
+          class="fas fa-exclamation-triangle" />
       </div>
-      
+
       <!-- Error Message -->
       <div class="error-message">
-        <h3 class="error-title">{{ cameraErrorTitle }}</h3>
-        <p class="error-description">{{ cameraErrorMessage }}</p>
+        <h3 class="error-title">
+          {{cameraErrorTitle}}
+        </h3>
+        <p class="error-description">
+          {{cameraErrorMessage}}
+        </p>
       </div>
-      
+
       <!-- Recovery Actions -->
       <div class="error-actions">
         <button
           v-if="retryable && !autoRetryActive"
           class="action-button primary"
           @click="handleRetry('camera')">
-          <i class="fas fa-redo"></i>
+          <i class="fas fa-redo" />
           Try Again
         </button>
-        
+
         <button
           v-if="isCameraPermissionError"
           class="action-button secondary"
           @click="showCameraHelp = true">
-          <i class="fas fa-question-circle"></i>
+          <i class="fas fa-question-circle" />
           Help
         </button>
-        
+
         <button
           class="action-button secondary"
           @click="handleDismiss('camera')">
-          <i class="fas fa-times"></i>
-          {{ isCriticalError ? 'Close' : 'Dismiss' }}
+          <i class="fas fa-times" />
+          {{isCriticalError ? 'Close' : 'Dismiss'}}
         </button>
       </div>
-      
+
       <!-- Auto Retry Indicator -->
       <div
         v-if="autoRetryActive"
         class="auto-retry-indicator">
-        <div class="retry-spinner"></div>
-        <span>Retrying in {{ autoRetryCountdown }}s...</span>
+        <div class="retry-spinner" />
+        <span>Retrying in {{autoRetryCountdown}}s...</span>
       </div>
     </div>
-    
+
     <!-- Scan Error Display -->
     <div
       v-if="scanError && !cameraError"
       class="error-content scan-error">
-      
       <!-- Error Icon -->
       <div class="error-icon">
-        <i class="fas fa-search" v-if="isNoResultsError"></i>
-        <i class="fas fa-exclamation-triangle" v-else></i>
+        <i
+          v-if="isNoResultsError"
+          class="fas fa-search" />
+        <i
+          v-else
+          class="fas fa-exclamation-triangle" />
       </div>
-      
+
       <!-- Error Message -->
       <div class="error-message">
-        <h3 class="error-title">{{ scanErrorTitle }}</h3>
-        <p class="error-description">{{ scanErrorMessage }}</p>
+        <h3 class="error-title">
+          {{scanErrorTitle}}
+        </h3>
+        <p class="error-description">
+          {{scanErrorMessage}}
+        </p>
       </div>
-      
+
       <!-- Recovery Actions -->
       <div class="error-actions">
         <button
           v-if="retryable && !autoRetryActive"
           class="action-button primary"
           @click="handleRetry('scan')">
-          <i class="fas fa-redo"></i>
+          <i class="fas fa-redo" />
           Try Again
         </button>
-        
+
         <button
           v-if="isNoResultsError"
           class="action-button secondary"
           @click="showScanHelp = true">
-          <i class="fas fa-lightbulb"></i>
+          <i class="fas fa-lightbulb" />
           Tips
         </button>
-        
+
         <button
           class="action-button secondary"
           @click="handleDismiss('scan')">
-          <i class="fas fa-times"></i>
+          <i class="fas fa-times" />
           Dismiss
         </button>
       </div>
     </div>
-    
+
     <!-- Camera Help Modal -->
     <div
       v-if="showCameraHelp"
@@ -108,8 +121,10 @@
       <div class="help-modal">
         <div class="help-header">
           <h3>Camera Permission Help</h3>
-          <button class="help-close" @click="showCameraHelp = false">
-            <i class="fas fa-times"></i>
+          <button
+            class="help-close"
+            @click="showCameraHelp = false">
+            <i class="fas fa-times" />
           </button>
         </div>
         <div class="help-content">
@@ -140,7 +155,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Scan Help Modal -->
     <div
       v-if="showScanHelp"
@@ -149,8 +164,10 @@
       <div class="help-modal">
         <div class="help-header">
           <h3>Scanning Tips</h3>
-          <button class="help-close" @click="showScanHelp = false">
-            <i class="fas fa-times"></i>
+          <button
+            class="help-close"
+            @click="showScanHelp = false">
+            <i class="fas fa-times" />
           </button>
         </div>
         <div class="help-content">
@@ -221,9 +238,9 @@ export default {
     }
   },
   emits: [
-    'retry',        // { type: 'camera' | 'scan' }
-    'dismiss',      // { type: 'camera' | 'scan' }
-    'auto-retry'    // { type: 'camera' | 'scan', attempt: number }
+    'retry', // { type: 'camera' | 'scan' }
+    'dismiss', // { type: 'camera' | 'scan' }
+    'auto-retry' // { type: 'camera' | 'scan', attempt: number }
   ],
   data() {
     return {
@@ -240,7 +257,7 @@ export default {
     hasError() {
       return !!(this.cameraError || this.scanError);
     },
-    
+
     // Container styling classes
     containerClasses() {
       return [
@@ -252,47 +269,49 @@ export default {
         `error-position-${this.position}`
       ];
     },
-    
+
     // Camera error analysis
     cameraErrorType() {
-      if (!this.cameraError) return null;
-      
+      if(!this.cameraError) {
+        return null;
+      }
+
       const errorString = this.getErrorString(this.cameraError);
-      
-      if (errorString.includes('NotAllowedError') || 
-          errorString.includes('permission') || 
+
+      if(errorString.includes('NotAllowedError') ||
+          errorString.includes('permission') ||
           errorString.includes('denied')) {
         return 'permission';
       }
-      if (errorString.includes('NotFoundError') || 
+      if(errorString.includes('NotFoundError') ||
           errorString.includes('no camera') ||
           errorString.includes('not found')) {
         return 'not-found';
       }
-      if (errorString.includes('NotReadableError') || 
+      if(errorString.includes('NotReadableError') ||
           errorString.includes('in use') ||
           errorString.includes('already')) {
         return 'in-use';
       }
-      if (errorString.includes('NotSupportedError') || 
+      if(errorString.includes('NotSupportedError') ||
           errorString.includes('not supported')) {
         return 'not-supported';
       }
-      
+
       return 'unknown';
     },
-    
+
     isCameraPermissionError() {
       return this.cameraErrorType === 'permission';
     },
-    
+
     isCriticalError() {
-      return this.cameraErrorType === 'not-found' || 
+      return this.cameraErrorType === 'not-found' ||
              this.cameraErrorType === 'not-supported';
     },
-    
+
     cameraErrorTitle() {
-      switch (this.cameraErrorType) {
+      switch(this.cameraErrorType) {
         case 'permission':
           return 'Camera Permission Required';
         case 'not-found':
@@ -305,53 +324,60 @@ export default {
           return 'Camera Error';
       }
     },
-    
+
     cameraErrorMessage() {
-      switch (this.cameraErrorType) {
+      switch(this.cameraErrorType) {
         case 'permission':
-          return 'Please allow camera access to scan barcodes. You can also upload a photo instead.';
+          return 'Please allow camera access to scan barcodes. ' +
+            'You can also upload a photo instead.';
         case 'not-found':
-          return 'No camera was found on this device. Please use the upload option to scan from a photo.';
+          return 'No camera was found on this device. Please use the upload ' +
+            'option to scan from a photo.';
         case 'in-use':
-          return 'The camera is being used by another application. Please close other apps and try again.';
+          return 'The camera is being used by another application. ' +
+            'Please close other apps and try again.';
         case 'not-supported':
-          return 'Camera access is not supported on this device. Please use the upload option.';
+          return 'Camera access is not supported on this device. ' +
+            'Please use the upload option.';
         default:
-          return this.getErrorString(this.cameraError) || 'An error occurred accessing the camera.';
+          return this.getErrorString(this.cameraError) ||
+            'An error occurred accessing the camera.';
       }
     },
-    
+
     // Scan error analysis
     scanErrorType() {
-      if (!this.scanError) return null;
-      
+      if(!this.scanError) {
+        return null;
+      }
+
       const errorString = this.getErrorString(this.scanError);
-      
-      if (errorString.includes('no results') || 
+
+      if(errorString.includes('no results') ||
           errorString.includes('not found') ||
           errorString.includes('no barcode')) {
         return 'no-results';
       }
-      if (errorString.includes('license') || 
+      if(errorString.includes('license') ||
           errorString.includes('parsing') ||
           errorString.includes('invalid format')) {
         return 'parsing';
       }
-      if (errorString.includes('file') || 
+      if(errorString.includes('file') ||
           errorString.includes('upload') ||
           errorString.includes('image')) {
         return 'file';
       }
-      
+
       return 'unknown';
     },
-    
+
     isNoResultsError() {
       return this.scanErrorType === 'no-results';
     },
-    
+
     scanErrorTitle() {
-      switch (this.scanErrorType) {
+      switch(this.scanErrorType) {
         case 'no-results':
           return 'No Barcode Found';
         case 'parsing':
@@ -362,30 +388,34 @@ export default {
           return 'Scan Error';
       }
     },
-    
+
     scanErrorMessage() {
-      switch (this.scanErrorType) {
+      switch(this.scanErrorType) {
         case 'no-results':
-          return 'No barcode could be detected. Please ensure the barcode is clear and well-lit, then try again.';
+          return 'No barcode could be detected. Please ensure the barcode ' +
+            'is clear and well-lit, then try again.';
         case 'parsing':
-          return 'The barcode was detected but could not be parsed. Please ensure it\'s a valid driver license barcode.';
+          return 'The barcode was detected but could not be parsed. ' +
+            'Please ensure it\'s a valid driver license barcode.';
         case 'file':
-          return 'There was an error processing the uploaded file. Please try a different image.';
+          return 'There was an error processing the uploaded file. ' +
+            'Please try a different image.';
         default:
-          return this.getErrorString(this.scanError) || 'An error occurred during scanning.';
+          return this.getErrorString(this.scanError) ||
+            'An error occurred during scanning.';
       }
     }
   },
   watch: {
     // Start auto retry when appropriate
     cameraError(newError, oldError) {
-      if (newError && !oldError && this.shouldAutoRetry('camera')) {
+      if(newError && !oldError && this.shouldAutoRetry('camera')) {
         this.startAutoRetry('camera');
       }
     },
-    
+
     scanError(newError, oldError) {
-      if (newError && !oldError && this.shouldAutoRetry('scan')) {
+      if(newError && !oldError && this.shouldAutoRetry('scan')) {
         this.startAutoRetry('scan');
       }
     }
@@ -396,61 +426,77 @@ export default {
   methods: {
     // Error string extraction
     getErrorString(error) {
-      if (typeof error === 'string') return error;
-      if (error instanceof Error) return error.message || error.name;
-      if (error && typeof error === 'object') return error.message || JSON.stringify(error);
+      if(typeof error === 'string') {
+        return error;
+      }
+      if(error instanceof Error) {
+        return error.message || error.name;
+      }
+
+      if(error && typeof error === 'object') {
+        return error.message || JSON.stringify(error);
+      }
       return String(error);
     },
-    
+
     // Event handlers
     handleRetry(type) {
       this.clearAutoRetry();
-      this.$emit('retry', { type });
+      this.$emit('retry', {type});
     },
-    
+
     handleDismiss(type) {
       this.clearAutoRetry();
-      this.$emit('dismiss', { type });
+      this.$emit('dismiss', {type});
     },
-    
+
     // Auto retry logic
     shouldAutoRetry(type) {
-      if (this.autoRetryDelay <= 0) return false;
-      if (this.autoRetryAttempts >= this.maxAutoRetries) return false;
-      
+      if(this.autoRetryDelay <= 0) {
+        return false;
+      }
+
+      if(this.autoRetryAttempts >= this.maxAutoRetries) {
+        return false;
+      }
+
       // Don't auto retry critical errors
-      if (type === 'camera' && this.isCriticalError) return false;
-      
+      if(type === 'camera' && this.isCriticalError) {
+        return false;
+      }
+
       return true;
     },
-    
+
     startAutoRetry(type) {
-      if (this.autoRetryActive) return;
-      
+      if(this.autoRetryActive) {
+        return;
+      }
+
       this.autoRetryActive = true;
       this.autoRetryCountdown = this.autoRetryDelay;
-      
+
       this.autoRetryTimer = setInterval(() => {
         this.autoRetryCountdown--;
-        
-        if (this.autoRetryCountdown <= 0) {
+
+        if(this.autoRetryCountdown <= 0) {
           this.executeAutoRetry(type);
         }
       }, 1000);
     },
-    
+
     executeAutoRetry(type) {
       this.clearAutoRetry();
       this.autoRetryAttempts++;
-      
-      this.$emit('auto-retry', { 
-        type, 
-        attempt: this.autoRetryAttempts 
+
+      this.$emit('auto-retry', {
+        type,
+        attempt: this.autoRetryAttempts
       });
     },
-    
+
     clearAutoRetry() {
-      if (this.autoRetryTimer) {
+      if(this.autoRetryTimer) {
         clearInterval(this.autoRetryTimer);
         this.autoRetryTimer = null;
       }
@@ -465,7 +511,8 @@ export default {
 /* Base Container */
 .error-display-container {
   z-index: 1500;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
 /* Overlay vs Inline */
@@ -756,20 +803,20 @@ export default {
   .error-overlay {
     padding: 15px;
   }
-  
+
   .error-content {
     padding: 25px 20px;
   }
-  
+
   .error-actions {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .action-button {
     min-width: auto;
   }
-  
+
   .help-modal {
     margin: 10px;
     max-height: 90vh;
@@ -781,7 +828,7 @@ export default {
   .error-position-top {
     padding-top: calc(env(safe-area-inset-top, 0px) + 60px);
   }
-  
+
   .error-position-bottom {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
   }
@@ -792,7 +839,7 @@ export default {
   .error-content {
     border: 2px solid #000;
   }
-  
+
   .action-button {
     border: 2px solid;
   }

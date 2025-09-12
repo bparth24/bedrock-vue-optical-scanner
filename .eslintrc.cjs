@@ -5,9 +5,21 @@ module.exports = {
     node: true
   },
   extends: [
+    'plugin:quasar/standard',
     'digitalbazaar',
-    'digitalbazaar/jsdoc',
-    'digitalbazaar/module'
+    'digitalbazaar/module',
+    'digitalbazaar/vue3'
   ],
-  ignorePatterns: ['node_modules/']
+  ignorePatterns: [
+    'node_modules/',
+    'dist/',
+    '.cache/'
+  ],
+  rules: {
+    'linebreak-style': [
+      'error',
+      (process.platform === 'win32' ? 'windows' : 'unix')
+    ],
+    'unicorn/prefer-node-protocol': 'error'
+  }
 };

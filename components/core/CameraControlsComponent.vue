@@ -1,53 +1,56 @@
 <template>
   <div class="camera-controls-container">
     <!-- Camera Device Selection -->
-    <div 
-      v-if="cameraList.length > 1" 
+    <div
+      v-if="cameraList.length > 1"
       class="control-group">
       <label class="control-label">Camera:</label>
-      <select 
+      <select
         :value="currentDevice"
         :disabled="disabled"
         class="device-selector"
         @change="onDeviceChange">
-        <option value="">Select Camera</option>
-        <option 
+        <option value="">
+          Select Camera
+        </option>
+        <option
           v-for="device in cameraList"
           :key="device.deviceId"
           :value="device.deviceId">
-          {{ device.label || `Camera ${device.deviceId.slice(0, 8)}` }}
+          {{device.label || `Camera ${device.deviceId.slice(0, 8)}`}}
         </option>
       </select>
     </div>
 
     <!-- Torch Control -->
-    <div 
-      v-if="capabilities.torch" 
+    <div
+      v-if="capabilities.torch"
       class="control-group">
       <button
         :disabled="disabled"
         :class="['control-button', 'torch-button', { active: torchOn }]"
         @click="onTorchToggle">
-        <span class="torch-icon">{{ torchOn ? '🔦' : '💡' }}</span>
-        <span class="torch-label">{{ torchOn ? 'Torch On' : 'Torch Off' }}</span>
+        <span class="torch-icon">{{torchOn ? '🔦' : '💡'}}</span>
+        <span class="torch-label">
+          {{torchOn ? 'Torch On' : 'Torch Off'}}</span>
       </button>
     </div>
 
     <!-- Zoom Control -->
-    <div 
-      v-if="capabilities.zoom" 
+    <div
+      v-if="capabilities.zoom"
       class="control-group zoom-control">
       <label class="control-label">
-        Zoom: {{ zoomLevel }}x
+        Zoom: {{zoomLevel}}x
       </label>
       <div class="zoom-slider-container">
-        <button 
+        <button
           :disabled="disabled || zoomLevel <= constraints.zoom.min"
           class="zoom-button"
           @click="onZoomDecrease">
           <span class="zoom-icon">🔍-</span>
         </button>
-        
+
         <input
           type="range"
           :value="zoomLevel"
@@ -57,9 +60,9 @@
           :disabled="disabled"
           class="zoom-slider"
           @input="onZoomInput"
-          @change="onZoomChange" />
-        
-        <button 
+          @change="onZoomChange">
+
+        <button
           :disabled="disabled || zoomLevel >= constraints.zoom.max"
           class="zoom-button"
           @click="onZoomIncrease">
@@ -74,8 +77,8 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { ref, computed } from 'vue';
-import { DEFAULT_ZOOM_CONSTRAINTS } from '../../lib/utils/constants.js';
+import {computed, ref} from 'vue';
+import {DEFAULT_ZOOM_CONSTRAINTS} from '../../lib/utils/constants.js';
 
 export default {
   name: 'CameraControlsComponent',
@@ -86,11 +89,11 @@ export default {
     },
     capabilities: {
       type: Object,
-      default: () => ({ zoom: false, torch: false })
+      default: () => ({zoom: false, torch: false})
     },
     constraints: {
       type: Object,
-      default: () => ({ zoom: { ...DEFAULT_ZOOM_CONSTRAINTS } })
+      default: () => ({zoom: {...DEFAULT_ZOOM_CONSTRAINTS}})
     },
     currentDevice: {
       type: String,
@@ -111,87 +114,93 @@ export default {
   },
   emits: [
     'device-changed',
-    'torch-toggled', 
+    'torch-toggled',
     'zoom-changed'
   ],
-  setup(props, { emit }) {
+  setup(props, {emit}) {
     // Step 1: Reactive state
     const pendingZoomValue = ref(props.zoomLevel);
-    
+
     // Step 2: Computed properties
-    const isZoomAtMin = computed(() => 
+    const isZoomAtMin = computed(() =>
       props.zoomLevel <= props.constraints.zoom.min
     );
-    
-    const isZoomAtMax = computed(() => 
+
+    const isZoomAtMax = computed(() =>
       props.zoomLevel >= props.constraints.zoom.max
     );
-    
+
     // Step 3: Event handlers
     function onDeviceChange(event) {
       const deviceId = event.target.value;
-      if (deviceId && deviceId !== props.currentDevice) {
-        emit('device-changed', { deviceId });
+      if(deviceId && deviceId !== props.currentDevice) {
+        emit('device-changed', {deviceId});
       }
     }
-    
+
     function onTorchToggle() {
-      if (props.disabled) return;
-      
+      if(props.disabled) {
+        return;
+      }
+
       const newTorchState = !props.torchOn;
-      emit('torch-toggled', { torchOn: newTorchState });
+      emit('torch-toggled', {torchOn: newTorchState});
     }
-    
+
     function onZoomInput(event) {
       // Update pending value during drag (for smooth UI)
       pendingZoomValue.value = parseFloat(event.target.value);
     }
-    
+
     function onZoomChange(event) {
       // Emit final value when user releases slider
       const newZoomLevel = parseFloat(event.target.value);
-      
-      if (newZoomLevel !== props.zoomLevel) {
-        emit('zoom-changed', { zoomLevel: newZoomLevel });
+
+      if(newZoomLevel !== props.zoomLevel) {
+        emit('zoom-changed', {zoomLevel: newZoomLevel});
       }
     }
-    
+
     function onZoomDecrease() {
-      if (props.disabled || isZoomAtMin.value) return;
-      
+      if(props.disabled || isZoomAtMin.value) {
+        return;
+      }
+
       const newZoom = Math.max(
         props.constraints.zoom.min,
         props.zoomLevel - props.constraints.zoom.step
       );
-      
-      emit('zoom-changed', { zoomLevel: newZoom });
+
+      emit('zoom-changed', {zoomLevel: newZoom});
     }
-    
+
     function onZoomIncrease() {
-      if (props.disabled || isZoomAtMax.value) return;
-      
+      if(props.disabled || isZoomAtMax.value) {
+        return;
+      }
+
       const newZoom = Math.min(
         props.constraints.zoom.max,
         props.zoomLevel + props.constraints.zoom.step
       );
-      
-      emit('zoom-changed', { zoomLevel: newZoom });
+
+      emit('zoom-changed', {zoomLevel: newZoom});
     }
-    
+
     // Step 4: Helper functions
     function formatDeviceLabel(device) {
       return device.label || `Camera ${device.deviceId.slice(0, 8)}`;
     }
-    
+
     // Step 5: Return object - only what template needs
     return {
       // State
       pendingZoomValue,
-      
+
       // Computed
       isZoomAtMin,
       isZoomAtMax,
-      
+
       // Event handlers
       onDeviceChange,
       onTorchToggle,
@@ -199,7 +208,7 @@ export default {
       onZoomChange,
       onZoomDecrease,
       onZoomIncrease,
-      
+
       // Helpers
       formatDeviceLabel
     };
@@ -374,21 +383,21 @@ export default {
     gap: 12px;
     padding: 12px;
   }
-  
+
   .control-group {
     flex: 1;
     min-width: 150px;
   }
-  
+
   .zoom-control {
     flex-basis: 100%;
   }
-  
+
   .control-button {
     padding: 10px 12px;
     font-size: 13px;
   }
-  
+
   .torch-icon {
     font-size: 14px;
   }
@@ -399,22 +408,22 @@ export default {
   .camera-controls-container {
     background: rgba(0, 0, 0, 0.8);
   }
-  
+
   .device-selector {
     background: #222;
     border-color: #444;
   }
-  
+
   .control-button {
     background: #333;
     border-color: #444;
   }
-  
+
   .zoom-button {
     background: #333;
     border-color: #444;
   }
-  
+
   .zoom-slider {
     background: #444;
   }

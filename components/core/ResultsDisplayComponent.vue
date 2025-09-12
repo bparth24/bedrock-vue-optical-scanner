@@ -5,40 +5,48 @@
       <h3 class="results-title">
         <span class="results-icon">📋</span>
         Scan Results
-        <span v-if="results.length > 0" class="results-count">({{ results.length }})</span>
+        <span
+          v-if="results.length > 0"
+          class="results-count">({{results.length}})</span>
       </h3>
-      
+
       <!-- Header Controls -->
       <div class="header-controls">
         <!-- Format Selector -->
         <div class="format-selector">
           <label for="display-format">View:</label>
-          <select 
+          <select
             id="display-format"
             v-model="currentFormat"
             class="format-select">
-            <option value="simple">Simple</option>
-            <option value="detailed">Detailed</option>
-            <option value="raw">Raw Data</option>
+            <option value="simple">
+              Simple
+            </option>
+            <option value="detailed">
+              Detailed
+            </option>
+            <option value="raw">
+              Raw Data
+            </option>
           </select>
         </div>
-        
+
         <!-- Action Buttons -->
         <div class="action-buttons">
-          <button 
+          <button
             v-if="results.length > 0"
-            @click="exportResults"
             class="action-button export-button"
-            title="Export Results">
+            title="Export Results"
+            @click="exportResults">
             <span class="button-icon">📤</span>
             Export
           </button>
-          
-          <button 
+
+          <button
             v-if="showClearButton && results.length > 0"
-            @click="clearResults"
             class="action-button clear-button"
-            title="Clear All Results">
+            title="Clear All Results"
+            @click="clearResults">
             <span class="button-icon">🗑️</span>
             Clear
           </button>
@@ -49,98 +57,160 @@
     <!-- Results Content -->
     <div class="results-content">
       <!-- No Results State -->
-      <div v-if="results.length === 0" class="no-results">
-        <div class="no-results-icon">🔍</div>
-        <div class="no-results-text">No scan results yet</div>
-        <div class="no-results-hint">Scan a QR code, barcode, or document to see results here</div>
+      <div
+        v-if="results.length === 0"
+        class="no-results">
+        <div class="no-results-icon">
+          🔍
+        </div>
+        <div class="no-results-text">
+          No scan results yet
+        </div>
+        <div class="no-results-hint">
+          Scan a QR code, barcode, or document to see results here
+        </div>
       </div>
 
       <!-- Results List -->
-      <div v-else class="results-list">
-        <div 
+      <div
+        v-else
+        class="results-list">
+        <div
           v-for="(result, index) in displayedResults"
           :key="`result-${index}`"
           :class="['result-item', { 'selected': selectedIndex === index }]"
           @click="selectResult(result, index)">
-          
           <!-- Result Header -->
           <div class="result-header">
             <div class="result-meta">
-              <span class="result-format">{{ getFormatDisplay(result.format) }}</span>
-              <span class="result-timestamp">{{ formatTimestamp(result.timestamp) }}</span>
+              <span class="result-format">
+                {{getFormatDisplay(result.format)}}
+              </span>
+              <span class="result-timestamp">
+                {{formatTimestamp(result.timestamp)}}
+              </span>
             </div>
             <div class="result-indicator">
-              {{ getResultIcon(result.format) }}
+              {{getResultIcon(result.format)}}
             </div>
           </div>
 
           <!-- Result Content Based on Format -->
           <div class="result-content">
             <!-- Simple Format -->
-            <div v-if="currentFormat === 'simple'" class="simple-content">
-              <div class="simple-text">{{ getSimpleText(result) }}</div>
+            <div
+              v-if="currentFormat === 'simple'"
+              class="simple-content">
+              <div class="simple-text">
+                {{getSimpleText(result)}}
+              </div>
             </div>
 
             <!-- Detailed Format -->
-            <div v-else-if="currentFormat === 'detailed'" class="detailed-content">
+            <div
+              v-else-if="currentFormat === 'detailed'"
+              class="detailed-content">
               <!-- Driver License Display -->
-              <div v-if="result.driverLicense" class="dl-details">
-                <h4 class="dl-title">👤 Driver License Information</h4>
+              <div
+                v-if="result.driverLicense"
+                class="dl-details">
+                <h4 class="dl-title">
+                  👤 Driver License Information
+                </h4>
                 <div class="dl-fields">
-                  <div 
-                    v-for="(field, key) in getDisplayFields(result.driverLicense)"
+                  <div
+                    v-for="(field, key)
+                      in getDisplayFields(result.driverLicense)"
                     :key="key"
                     class="dl-field">
-                    <span class="field-label">{{ field.description }}:</span>
-                    <span class="field-value">{{ field.value }}</span>
+                    <span class="field-label">{{field.description}}:</span>
+                    <span class="field-value">{{field.value}}</span>
                   </div>
                 </div>
               </div>
 
               <!-- MRZ Display -->
-              <div v-else-if="result.data && result.format === 'mrz'" class="mrz-details">
-                <h4 class="mrz-title">🆔 Document Information</h4>
+              <div
+                v-else-if="result.data && result.format === 'mrz'"
+                class="mrz-details">
+                <h4 class="mrz-title">
+                  🆔 Document Information
+                </h4>
                 <div class="mrz-fields">
-                  <div v-if="result.data.firstName || result.data.lastName" class="mrz-field">
+                  <div
+                    v-if="result.data.firstName || result.data.lastName"
+                    class="mrz-field">
                     <span class="field-label">Name:</span>
-                    <span class="field-value">{{ result.data.firstName }} {{ result.data.lastName }}</span>
+                    <span class="field-value">
+                      {{result.data.firstName}}
+                      {{result.data.lastName}}
+                    </span>
                   </div>
-                  <div v-if="result.data.documentNumber" class="mrz-field">
+                  <div
+                    v-if="result.data.documentNumber"
+                    class="mrz-field">
                     <span class="field-label">Document #:</span>
-                    <span class="field-value">{{ result.data.documentNumber }}</span>
+                    <span class="field-value">
+                      {{result.data.documentNumber}}
+                    </span>
                   </div>
-                  <div v-if="result.data.dateOfBirth" class="mrz-field">
+                  <div
+                    v-if="result.data.dateOfBirth"
+                    class="mrz-field">
                     <span class="field-label">Date of Birth:</span>
-                    <span class="field-value">{{ result.data.dateOfBirth }}</span>
+                    <span class="field-value">{{result.data.dateOfBirth}}</span>
                   </div>
-                  <div v-if="result.data.dateOfExpiry" class="mrz-field">
+                  <div
+                    v-if="result.data.dateOfExpiry"
+                    class="mrz-field">
                     <span class="field-label">Expires:</span>
-                    <span class="field-value">{{ result.data.dateOfExpiry }}</span>
+                    <span class="field-value">
+                      {{result.data.dateOfExpiry}}
+                    </span>
                   </div>
-                  <div v-if="result.data.nationality" class="mrz-field">
+                  <div
+                    v-if="result.data.nationality"
+                    class="mrz-field">
                     <span class="field-label">Nationality:</span>
-                    <span class="field-value">{{ result.data.nationality }}</span>
+                    <span class="field-value">{{result.data.nationality}}</span>
                   </div>
-                  <div v-if="result.data.issuingState" class="mrz-field">
+                  <div
+                    v-if="result.data.issuingState"
+                    class="mrz-field">
                     <span class="field-label">Issuing State:</span>
-                    <span class="field-value">{{ result.data.issuingState }}</span>
+                    <span class="field-value">
+                      {{result.data.issuingState}}
+                    </span>
                   </div>
-                  
+
                   <!-- Validation Info -->
-                  <div v-if="result.data.validation" class="validation-info">
-                    <h5 class="validation-title">✅ Validation</h5>
+                  <div
+                    v-if="result.data.validation"
+                    class="validation-info">
+                    <h5 class="validation-title">
+                      ✅ Validation
+                    </h5>
                     <div class="validation-fields">
                       <div class="validation-field">
                         <span class="field-label">Status:</span>
-                        <span class="field-value">{{ result.data.validation.overallStatus?.toUpperCase() }}</span>
+                        <span class="field-value">
+                          {{result.data
+                            .validation.overallStatus?.toUpperCase()}}
+                        </span>
                       </div>
                       <div class="validation-field">
                         <span class="field-label">Completeness:</span>
-                        <span class="field-value">{{ result.data.validation.statistics?.overallCompleteness }}%</span>
+                        <span class="field-value">
+                          {{result.data
+                            .validation.statistics?.overallCompleteness}}%
+                        </span>
                       </div>
                       <div class="validation-field">
                         <span class="field-label">Valid Fields:</span>
-                        <span class="field-value">{{ result.data.validation.statistics?.validFields }}/{{ result.data.validation.statistics?.totalFields }}</span>
+                        <span class="field-value">
+                          {{result.data
+                            .validation.statistics?.validFields}}/{{result.data
+                            .validation.statistics?.totalFields}}</span>
                       </div>
                     </div>
                   </div>
@@ -148,15 +218,23 @@
               </div>
 
               <!-- Standard Barcode Display -->
-              <div v-else class="standard-details">
-                <h4 class="standard-title">📄 Content</h4>
-                <div class="standard-text">{{ result.text }}</div>
+              <div
+                v-else
+                class="standard-details">
+                <h4 class="standard-title">
+                  📄 Content
+                </h4>
+                <div class="standard-text">
+                  {{result.text}}
+                </div>
               </div>
             </div>
 
             <!-- Raw Format -->
-            <div v-else-if="currentFormat === 'raw'" class="raw-content">
-              <pre class="raw-text">{{ formatRawData(result) }}</pre>
+            <div
+              v-else-if="currentFormat === 'raw'"
+              class="raw-content">
+              <pre class="raw-text">{{formatRawData(result)}}</pre>
             </div>
           </div>
         </div>
@@ -164,9 +242,11 @@
     </div>
 
     <!-- Results Footer -->
-    <div v-if="results.length > maxResults" class="results-footer">
+    <div
+      v-if="results.length > maxResults"
+      class="results-footer">
       <div class="pagination-info">
-        Showing {{ maxResults }} of {{ results.length }} results
+        Showing {{maxResults}} of {{results.length}} results
       </div>
     </div>
   </div>
@@ -176,7 +256,7 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { ref, computed, watch } from 'vue';
+import {computed, ref, watch} from 'vue';
 
 export default {
   name: 'ResultsDisplayComponent',
@@ -192,7 +272,7 @@ export default {
     format: {
       type: String,
       default: 'detailed',
-      validator: (value) => ['simple', 'detailed', 'raw'].includes(value)
+      validator: value => ['simple', 'detailed', 'raw'].includes(value)
     },
     showClearButton: {
       type: Boolean,
@@ -208,193 +288,211 @@ export default {
     'clear-results',
     'export-requested'
   ],
-  setup(props, { emit, expose }) {
+  setup(props, {emit, expose}) {
     // Step 1: Reactive state
     const currentFormat = ref(props.format);
     const selectedIndex = ref(null);
-    
+
     // Step 2: Computed properties
     const displayedResults = computed(() => {
       const resultsToShow = props.results.slice(0, props.maxResults);
-      
+
       // Add timestamps if not present
       return resultsToShow.map((result, index) => ({
         ...result,
-        timestamp: result.timestamp || Date.now() - (resultsToShow.length - index) * 1000
+        timestamp: result.timestamp ||
+        Date.now() - (resultsToShow.length - index) * 1000
       }));
     });
-    
+
     // Step 3: Watchers
-    watch(() => props.format, (newFormat) => {
+    watch(() => props.format, newFormat => {
       currentFormat.value = newFormat;
     });
-    
+
     // Step 4: Event handlers
     function selectResult(result, index) {
       selectedIndex.value = index;
-      emit('result-selected', { result, index });
+      emit('result-selected', {result, index});
     }
-    
+
     function clearResults() {
       selectedIndex.value = null;
       emit('clear-results');
     }
-    
+
     function exportResults() {
       const exportData = {
         results: props.results,
         format: currentFormat.value,
         exportedAt: new Date().toISOString()
       };
-      
+
       emit('export-requested', exportData);
     }
-    
+
     // Step 5: Display formatting functions
     function getFormatDisplay(format) {
       const formatMap = {
-        'qr_code': 'QR Code',
-        'pdf417': 'PDF417',
-        'pdf417_enhanced': 'PDF417 Enhanced',
-        'mrz': 'MRZ',
-        'code128': 'Code 128',
-        'code39': 'Code 39',
-        'ean13': 'EAN-13',
-        'ean8': 'EAN-8',
-        'upca': 'UPC-A',
-        'upce': 'UPC-E'
+        qr_code: 'QR Code',
+        pdf417: 'PDF417',
+        pdf417_enhanced: 'PDF417 Enhanced',
+        mrz: 'MRZ',
+        code128: 'Code 128',
+        code39: 'Code 39',
+        ean13: 'EAN-13',
+        ean8: 'EAN-8',
+        upca: 'UPC-A',
+        upce: 'UPC-E'
       };
       return formatMap[format] || format?.toUpperCase() || 'Unknown';
     }
-    
+
     function getResultIcon(format) {
       const iconMap = {
-        'qr_code': '⚡',
-        'pdf417': '📊',
-        'pdf417_enhanced': '📊+',
-        'mrz': '🆔',
-        'code128': '📋',
-        'code39': '📋',
-        'ean13': '🏷️',
-        'ean8': '🏷️',
-        'upca': '🏷️',
-        'upce': '🏷️'
+        qr_code: '⚡',
+        pdf417: '📊',
+        pdf417_enhanced: '📊+',
+        mrz: '🆔',
+        code128: '📋',
+        code39: '📋',
+        ean13: '🏷️',
+        ean8: '🏷️',
+        upca: '🏷️',
+        upce: '🏷️'
       };
       return iconMap[format] || '📄';
     }
-    
+
     function getSimpleText(result) {
       // For driver license, show name and license number
-      if (result.driverLicense) {
+      if(result.driverLicense) {
         const dl = result.driverLicense;
         const firstName = dl.DAC?.value || dl.DCS?.value || '';
         const lastName = dl.DCS?.value || dl.DAC?.value || '';
         const licenseNum = dl.DAQ?.value || '';
-        
-        if (firstName && lastName) {
-          return `${firstName} ${lastName}${licenseNum ? ` - ${licenseNum}` : ''}`;
+
+        if(firstName && lastName) {
+          return `${firstName} ${lastName}${
+            licenseNum ? ` - ${licenseNum}` : ''
+          }`;
         }
         return licenseNum || 'Driver License Data';
       }
-      
+
       // For MRZ, show name and document number
-      if (result.data && result.format === 'mrz') {
-        const name = `${result.data.firstName || ''} ${result.data.lastName || ''}`.trim();
+      if(result.data && result.format === 'mrz') {
+        const firstName = result.data.firstName || '';
+        const lastName = result.data.lastName || '';
+        const name = `${firstName} ${lastName}`.trim();
         const docNum = result.data.documentNumber || '';
         return name || docNum || 'Document Data';
       }
-      
+
       // For standard barcodes, show first 50 characters
       const text = result.text || '';
       return text.length > 50 ? `${text.substring(0, 50)}...` : text;
     }
-    
+
     function getDisplayFields(driverLicense) {
-      if (!driverLicense) return {};
-      
+      if(!driverLicense) {
+        return {};
+      }
+
       // Filter out raw data and empty values, then sort by importance
       const fields = {};
-      const importantFields = ['DAC', 'DCS', 'DAQ', 'DBB', 'DBC', 'DBA', 'DAG', 'DAI', 'DAJ', 'DAK'];
-      
+      const importantFields = [
+        'DAC', 'DCS', 'DAQ', 'DBB', 'DBC',
+        'DBA', 'DAG', 'DAI', 'DAJ', 'DAK'
+      ];
+
       // Add important fields first
       importantFields.forEach(key => {
-        if (driverLicense[key] && driverLicense[key].value) {
+        if(driverLicense[key] && driverLicense[key].value) {
           fields[key] = driverLicense[key];
         }
       });
-      
+
       // Add remaining fields
       Object.keys(driverLicense).forEach(key => {
-        if (key !== 'raw' && !importantFields.includes(key) && driverLicense[key]?.value) {
+        if(
+          key !== 'raw' &&
+          !importantFields.includes(key) &&
+          driverLicense[key]?.value
+        ) {
           fields[key] = driverLicense[key];
         }
       });
-      
+
       return fields;
     }
-    
+
     function formatTimestamp(timestamp) {
-      if (!timestamp) return '';
-      
+      if(!timestamp) {
+        return '';
+      }
+
       const date = new Date(timestamp);
       const now = new Date();
       const diff = now - date;
-      
-      if (diff < 60000) { // Less than 1 minute
+
+      if(diff < 60000) { // Less than 1 minute
         return 'Just now';
-      } else if (diff < 3600000) { // Less than 1 hour
+      } else if(diff < 3600000) { // Less than 1 hour
         const minutes = Math.floor(diff / 60000);
         return `${minutes}m ago`;
-      } else if (diff < 86400000) { // Less than 1 day
+      } else if(diff < 86400000) { // Less than 1 day
         const hours = Math.floor(diff / 3600000);
         return `${hours}h ago`;
       } else {
         return date.toLocaleDateString();
       }
     }
-    
+
     function formatRawData(result) {
       return JSON.stringify(result, null, 2);
     }
-    
+
     // Step 6: Exposed methods
     function clearResultsExposed() {
       clearResults();
     }
-    
+
     function exportResultsExposed(format = 'json') {
-      if (format === 'json') {
+      if(format === 'json') {
         return JSON.stringify(props.results, null, 2);
-      } else if (format === 'csv') {
+      } else if(format === 'csv') {
         return convertToCSV(props.results);
       }
       return '';
     }
-    
+
     function convertToCSV(results) {
-      if (results.length === 0) return '';
-      
+      if(results.length === 0) {
+        return '';
+      }
+
       const headers = ['Format', 'Text', 'Timestamp'];
       const rows = results.map(result => [
         result.format || '',
         (result.text || '').replace(/"/g, '""'),
         new Date(result.timestamp).toISOString()
       ]);
-      
+
       const csvContent = [
         headers.join(','),
         ...rows.map(row => row.map(field => `"${field}"`).join(','))
       ].join('\n');
-      
+
       return csvContent;
     }
-    
+
     // Step 7: Expose methods for parent components
     expose({
       clearResults: clearResultsExposed,
       exportResults: exportResultsExposed
     });
-    
+
     // Step 8: Return reactive state and methods for template
     return {
       currentFormat,
@@ -423,7 +521,8 @@ export default {
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
 }
 
 /* Header Section */

@@ -2,9 +2,11 @@
   <div class="scanner-controls-container">
     <!-- Format Selection -->
     <div class="control-section">
-      <h3 class="section-title">Scan Formats</h3>
+      <h3 class="section-title">
+        Scan Formats
+      </h3>
       <div class="format-checkboxes">
-        <label 
+        <label
           v-for="format in availableFormats"
           :key="format"
           class="format-checkbox">
@@ -13,17 +15,19 @@
             :value="format"
             :checked="selectedFormats.includes(format)"
             :disabled="disabled || scanning"
-            @change="onFormatChange(format, $event.target.checked)" />
-          <span class="checkbox-label">{{ getFormatLabel(format) }}</span>
+            @change="onFormatChange(format, $event.target.checked)">
+          <span class="checkbox-label">{{getFormatLabel(format)}}</span>
         </label>
       </div>
     </div>
 
     <!-- Scan Mode Selection -->
     <div class="control-section">
-      <h3 class="section-title">Scan Mode</h3>
+      <h3 class="section-title">
+        Scan Mode
+      </h3>
       <div class="mode-radio-group">
-        <label 
+        <label
           v-for="modeOption in availableModes"
           :key="modeOption.value"
           class="mode-radio">
@@ -33,10 +37,10 @@
             :checked="mode === modeOption.value"
             :disabled="disabled || scanning"
             name="scanMode"
-            @change="onModeChange(modeOption.value)" />
+            @change="onModeChange(modeOption.value)">
           <span class="radio-label">
-            <strong>{{ modeOption.label }}</strong>
-            <small>{{ modeOption.description }}</small>
+            <strong>{{modeOption.label}}</strong>
+            <small>{{modeOption.description}}</small>
           </span>
         </label>
       </div>
@@ -49,7 +53,7 @@
           type="checkbox"
           :checked="continuousScanning"
           :disabled="disabled"
-          @change="onContinuousChange($event.target.checked)" />
+          @change="onContinuousChange($event.target.checked)">
         <span class="toggle-label">
           <strong>Continuous Scanning</strong>
           <small>Automatically scan for codes repeatedly</small>
@@ -67,21 +71,29 @@
           'ready': canScan && !scanning
         }]"
         @click="onScanTrigger">
-        <span class="scan-icon">{{ getScanButtonIcon() }}</span>
-        <span class="scan-text">{{ getScanButtonText() }}</span>
+        <span class="scan-icon">{{getScanButtonIcon()}}</span>
+        <span class="scan-text">{{getScanButtonText()}}</span>
       </button>
     </div>
 
     <!-- Scan Status -->
-    <div v-if="scanning || lastScanInfo" class="control-section status-section">
+    <div
+      v-if="scanning || lastScanInfo"
+      class="control-section status-section">
       <div class="scan-status">
-        <div v-if="scanning" class="status-item scanning">
+        <div
+          v-if="scanning"
+          class="status-item scanning">
           <span class="status-icon">🔍</span>
-          <span class="status-text">Scanning {{ selectedFormats.join(', ') }}...</span>
+          <span class="status-text">
+            Scanning {{selectedFormats.join(', ')}}...
+          </span>
         </div>
-        <div v-if="lastScanInfo && !scanning" class="status-item completed">
-          <span class="status-icon">{{ lastScanInfo.success ? '✅' : '❌' }}</span>
-          <span class="status-text">{{ lastScanInfo.message }}</span>
+        <div
+          v-if="lastScanInfo && !scanning"
+          class="status-item completed">
+          <span class="status-icon">{{lastScanInfo.success ? '✅' : '❌'}}</span>
+          <span class="status-text">{{lastScanInfo.message}}</span>
         </div>
       </div>
     </div>
@@ -92,8 +104,12 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { ref, computed, watch } from 'vue';
-import { AVAILABLE_FORMATS, FORMAT_LABELS, SCAN_MODES } from '../../lib/utils/constants.js';
+import {
+  AVAILABLE_FORMATS,
+  FORMAT_LABELS,
+  SCAN_MODES
+} from '../../lib/utils/constants.js';
+import {computed, ref, watch} from 'vue';
 
 export default {
   name: 'ScannerControlsComponent',
@@ -109,7 +125,7 @@ export default {
     mode: {
       type: String,
       default: 'first',
-      validator: (value) => SCAN_MODES.includes(value)
+      validator: value => SCAN_MODES.includes(value)
     },
     scanning: {
       type: Boolean,
@@ -134,16 +150,16 @@ export default {
     'mode-changed',
     'continuous-changed'
   ],
-  setup(props, { emit }) {
+  setup(props, {emit}) {
     // Step 1: Reactive state
     const selectedFormats = ref([...props.formatsToSupport]);
     const lastScanInfo = ref(null);
-    
+
     // Step 2: Computed properties
     const canScan = computed(() => {
       return selectedFormats.value.length > 0 && !props.disabled;
     });
-    
+
     const availableModes = computed(() => [
       {
         value: 'first',
@@ -151,7 +167,7 @@ export default {
         description: 'Stop at first successful scan'
       },
       {
-        value: 'all', 
+        value: 'all',
         label: 'All Formats',
         description: 'Scan all selected formats'
       },
@@ -161,96 +177,96 @@ export default {
         description: 'Let all scanners complete'
       }
     ]);
-    
+
     // Step 3: Watchers
-    watch(() => props.formatsToSupport, (newFormats) => {
+    watch(() => props.formatsToSupport, newFormats => {
       selectedFormats.value = [...newFormats];
-    }, { immediate: true });
-    
-    watch(() => props.lastScanResult, (result) => {
-      if (result) {
+    }, {immediate: true});
+
+    watch(() => props.lastScanResult, result => {
+      if(result) {
         lastScanInfo.value = {
           success: result.success || result.length > 0,
-          message: result.success 
-            ? `Found ${result.length || 1} result(s)`
-            : result.error || 'No results found'
+          message: result.success ?
+            `Found ${result.length || 1} result(s)` :
+            result.error || 'No results found'
         };
-        
+
         // Clear status after 3 seconds
         setTimeout(() => {
           lastScanInfo.value = null;
         }, 3000);
       }
     });
-    
+
     // Step 4: Event handlers
     function onFormatChange(format, checked) {
-      const newFormats = checked 
-        ? [...selectedFormats.value, format]
-        : selectedFormats.value.filter(f => f !== format);
-      
+      const newFormats = checked ?
+        [...selectedFormats.value, format] :
+        selectedFormats.value.filter(f => f !== format);
+
       selectedFormats.value = newFormats;
-      emit('formats-changed', { formats: newFormats });
+      emit('formats-changed', {formats: newFormats});
     }
-    
+
     function onModeChange(newMode) {
-      if (newMode !== props.mode) {
-        emit('mode-changed', { mode: newMode });
+      if(newMode !== props.mode) {
+        emit('mode-changed', {mode: newMode});
       }
     }
-    
+
     function onContinuousChange(continuous) {
-      emit('continuous-changed', { continuous });
+      emit('continuous-changed', {continuous});
     }
-    
+
     function onScanTrigger() {
-      if (!canScan.value || (props.scanning && !props.continuousScanning)) {
+      if(!canScan.value || (props.scanning && !props.continuousScanning)) {
         return;
       }
-      
+
       emit('scan-triggered');
     }
-    
+
     // Step 5: Helper functions
     function getFormatLabel(format) {
       return FORMAT_LABELS[format] || format.toUpperCase();
     }
-    
+
     function getScanButtonIcon() {
-      if (props.scanning) {
+      if(props.scanning) {
         return props.continuousScanning ? '⏹️' : '🔍';
       }
       return props.continuousScanning ? '🔄' : '📷';
     }
-    
+
     function getScanButtonText() {
-      if (props.scanning) {
+      if(props.scanning) {
         return props.continuousScanning ? 'Stop Scanning' : 'Scanning...';
       }
-      
-      if (props.continuousScanning) {
+
+      if(props.continuousScanning) {
         return 'Start Continuous';
       }
-      
+
       return 'Scan Now';
     }
-    
+
     // Step 6: Return object - only what template needs
     return {
       // State
       selectedFormats,
       lastScanInfo,
-      
+
       // Computed
       canScan,
       availableModes,
-      
+
       // Event handlers
       onFormatChange,
       onModeChange,
       onContinuousChange,
       onScanTrigger,
-      
+
       // Helpers
       getFormatLabel,
       getScanButtonIcon,
@@ -516,11 +532,11 @@ export default {
     padding: 16px;
     min-width: unset;
   }
-  
+
   .format-checkboxes {
     grid-template-columns: 1fr;
   }
-  
+
   .scan-button {
     padding: 14px 20px;
     font-size: 15px;
@@ -534,31 +550,31 @@ export default {
     border-color: #404040;
     color: #e0e0e0;
   }
-  
+
   .section-title {
     color: #e0e0e0;
     border-color: #0d6efd;
   }
-  
+
   .format-checkbox,
   .mode-radio,
   .continuous-toggle {
     background: #2d2d2d;
     border-color: #404040;
   }
-  
+
   .format-checkbox:hover,
   .mode-radio:hover,
   .continuous-toggle:hover {
     background: #3d3d3d;
   }
-  
+
   .checkbox-label,
   .radio-label strong,
   .toggle-label strong {
     color: #e0e0e0;
   }
-  
+
   .radio-label small,
   .toggle-label small {
     color: #b0b0b0;

@@ -8,7 +8,7 @@
       :disabled="disabled"
       multiple
       style="display: none"
-      @change="onFileSelect" />
+      @change="onFileSelect">
 
     <!-- Upload Button (if not hidden) -->
     <button
@@ -17,75 +17,83 @@
       :class="['upload-button', { 'drag-over': isDragOver }]"
       @click="triggerFileSelect">
       <span class="upload-icon">📁</span>
-      <span class="upload-text">{{ uploadButtonText }}</span>
+      <span class="upload-text">{{uploadButtonText}}</span>
     </button>
 
     <!-- Drag & Drop Area (if enabled) -->
     <div
       v-if="dragDrop && !hideUploadButton"
-      :class="['drag-drop-area', { 
+      :class="['drag-drop-area', {
         'drag-over': isDragOver,
-        'disabled': disabled 
+        'disabled': disabled
       }]"
       @click="triggerFileSelect"
       @dragover.prevent="onDragOver"
       @dragleave.prevent="onDragLeave"
       @drop.prevent="onDrop">
-      
       <div class="drag-content">
-        <span class="drag-icon">{{ isDragOver ? '📂' : '📋' }}</span>
+        <span class="drag-icon">{{isDragOver ? '📂' : '📋'}}</span>
         <div class="drag-text">
-          <strong>{{ isDragOver ? 'Drop files here' : 'Drag & drop files' }}</strong>
+          <strong>
+            {{isDragOver? 'Drop files here': 'Drag & drop files'}}
+          </strong>
           <small>or click to browse</small>
         </div>
         <div class="drag-formats">
-          Accepted: {{ acceptedTypesDisplay }}
+          Accepted: {{acceptedTypesDisplay}}
         </div>
       </div>
     </div>
 
     <!-- Upload Progress (if files are being processed) -->
-    <div v-if="processing.length > 0" class="upload-progress">
+    <div
+      v-if="processing.length > 0"
+      class="upload-progress">
       <h4>Processing Files:</h4>
-      <div 
-        v-for="item in processing" 
-        :key="item.id" 
+      <div
+        v-for="item in processing"
+        :key="item.id"
         class="progress-item">
-        <span class="file-name">{{ item.file.name }}</span>
+        <span class="file-name">{{item.file.name}}</span>
         <div class="progress-bar">
-          <div 
-            class="progress-fill" 
-            :style="{ width: item.progress + '%' }"></div>
+          <div
+            class="progress-fill"
+            :style="{ width: item.progress + '%' }" />
         </div>
-        <span class="progress-text">{{ item.progress }}%</span>
+        <span class="progress-text">{{item.progress}}%</span>
       </div>
     </div>
 
     <!-- Recently Uploaded Files -->
-    <div v-if="recentFiles.length > 0 && showRecentFiles" class="recent-files">
+    <div
+      v-if="recentFiles.length > 0 && showRecentFiles"
+      class="recent-files">
       <h4>Recent Uploads:</h4>
-      <div 
-        v-for="file in recentFiles.slice(0, maxRecentFiles)" 
+      <div
+        v-for="file in recentFiles.slice(0, maxRecentFiles)"
         :key="file.id"
         class="recent-file-item">
-        
         <div class="file-info">
-          <span class="file-name">{{ file.name }}</span>
-          <span class="file-size">({{ formatFileSize(file.size) }})</span>
+          <span class="file-name">{{file.name}}</span>
+          <span class="file-size">({{formatFileSize(file.size)}})</span>
         </div>
-        
+
         <!-- Thumbnail for images -->
-        <div v-if="file.preview" class="file-preview">
-          <img :src="file.preview" alt="Preview" />
+        <div
+          v-if="file.preview"
+          class="file-preview">
+          <img
+            :src="file.preview"
+            alt="Preview">
         </div>
-        
+
         <div class="file-actions">
-          <button 
+          <button
             class="action-button scan-again"
             @click="reScanFile(file)">
             🔍 Scan Again
           </button>
-          <button 
+          <button
             class="action-button remove"
             @click="removeRecentFile(file.id)">
             ❌ Remove
@@ -95,10 +103,16 @@
     </div>
 
     <!-- Error Display -->
-    <div v-if="uploadError" class="upload-error">
+    <div
+      v-if="uploadError"
+      class="upload-error">
       <span class="error-icon">⚠️</span>
-      <span class="error-message">{{ uploadError }}</span>
-      <button class="error-dismiss" @click="clearError">×</button>
+      <span class="error-message">{{uploadError}}</span>
+      <button
+        class="error-dismiss"
+        @click="clearError">
+        ×
+      </button>
     </div>
   </div>
 </template>
@@ -107,8 +121,8 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { ref, computed, nextTick } from 'vue';
-import { ACCEPTED_FILE_TYPES } from '../../lib/utils/constants.js';
+import {computed, ref} from 'vue';
+import {ACCEPTED_FILE_TYPES} from '../../lib/utils/constants.js';
 
 export default {
   name: 'UploadComponent',
@@ -152,51 +166,53 @@ export default {
     'upload-progress',
     'files-processed'
   ],
-  setup(props, { emit }) {
+  setup(props, {emit}) {
     // Step 1: Reactive state
     const fileInput = ref(null);
     const isDragOver = ref(false);
     const processing = ref([]);
     const recentFiles = ref([]);
     const uploadError = ref(null);
-    
+
     // Step 2: Computed properties
-    const acceptedTypesString = computed(() => 
+    const acceptedTypesString = computed(() =>
       props.acceptedTypes.join(',')
     );
-    
-    const acceptedTypesDisplay = computed(() => 
+
+    const acceptedTypesDisplay = computed(() =>
       props.acceptedTypes
         .map(type => type.split('/')[1].toUpperCase())
         .join(', ')
     );
-    
+
     // Step 3: File handling functions
     async function processFiles(files) {
       const fileArray = Array.from(files);
       const validFiles = [];
-      
+
       // Validate files
-      for (const file of fileArray) {
+      for(const file of fileArray) {
         const validation = validateFile(file);
-        if (!validation.valid) {
+        if(!validation.valid) {
           setError(validation.error);
           continue;
         }
         validFiles.push(file);
       }
-      
-      if (validFiles.length === 0) return;
-      
+
+      if(validFiles.length === 0) {
+        return;
+      }
+
       // Process each valid file
-      for (const file of validFiles) {
+      for(const file of validFiles) {
         await processFile(file);
       }
     }
-    
+
     async function processFile(file) {
       const processingId = Date.now() + Math.random();
-      
+
       // Add to processing list
       const processingItem = {
         id: processingId,
@@ -204,21 +220,21 @@ export default {
         progress: 0
       };
       processing.value.push(processingItem);
-      
+
       try {
         // Simulate progress (in real app, this would be actual file processing)
-        for (let progress = 0; progress <= 100; progress += 10) {
+        for(let progress = 0; progress <= 100; progress += 10) {
           processingItem.progress = progress;
-          emit('upload-progress', { file, progress });
+          emit('upload-progress', {file, progress});
           await new Promise(resolve => setTimeout(resolve, 50));
         }
-        
+
         // Convert to data URL
         const dataUrl = await fileToDataUrl(file);
-        
+
         // Create preview for images
         const preview = file.type.startsWith('image/') ? dataUrl : null;
-        
+
         // Create file record
         const fileRecord = {
           id: processingId,
@@ -229,53 +245,60 @@ export default {
           preview,
           uploadedAt: new Date()
         };
-        
+
         // Add to recent files
         recentFiles.value.unshift(fileRecord);
-        
+
         // Keep only max recent files
-        if (recentFiles.value.length > props.maxRecentFiles * 2) {
-          recentFiles.value = recentFiles.value.slice(0, props.maxRecentFiles * 2);
+        if(recentFiles.value.length > props.maxRecentFiles * 2) {
+          const maxFiles = props.maxRecentFiles * 2;
+          recentFiles.value = recentFiles.value.slice(0, maxFiles);
         }
-        
+
         // Emit success
-        emit('file-uploaded', { 
-          file, 
+        emit('file-uploaded', {
+          file,
           dataUrl,
           preview,
           id: processingId
         });
-        
-      } catch (error) {
+
+      } catch(error) {
         console.error('File processing error:', error);
-        emit('upload-error', { error, file });
+        emit('upload-error', {error, file});
         setError(`Failed to process ${file.name}: ${error.message}`);
       } finally {
         // Remove from processing
-        processing.value = processing.value.filter(item => item.id !== processingId);
+        processing.value =
+          processing.value.filter(item => item.id !== processingId);
       }
     }
-    
+
     function validateFile(file) {
       // Check file type
-      if (!props.acceptedTypes.some(type => file.type.match(type))) {
+      if(!props.acceptedTypes.some(type => file.type.match(type))) {
         return {
           valid: false,
-          error: `File type ${file.type} not supported. Accepted types: ${acceptedTypesDisplay.value}`
+          error:
+            'File type ' + file.type +
+            ' not supported. Accepted types: ' +
+            acceptedTypesDisplay.value
         };
       }
-      
+
       // Check file size
-      if (file.size > props.maxFileSize) {
+      if(file.size > props.maxFileSize) {
         return {
           valid: false,
-          error: `File size ${formatFileSize(file.size)} exceeds maximum ${formatFileSize(props.maxFileSize)}`
+          error:
+            'File size ' + formatFileSize(file.size) +
+            ' exceeds maximum ' + formatFileSize(props.maxFileSize)
         };
       }
-      
-      return { valid: true };
+
+      return {valid: true};
     }
-    
+
     function fileToDataUrl(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -284,100 +307,108 @@ export default {
         reader.readAsDataURL(file);
       });
     }
-    
+
     // Step 4: Event handlers
     function triggerFileSelect() {
-      if (props.disabled || !fileInput.value) return;
+      if(props.disabled || !fileInput.value) {
+        return;
+      }
       fileInput.value.click();
     }
-    
+
     function onFileSelect(event) {
       const files = event.target.files;
-      if (files && files.length > 0) {
+      if(files && files.length > 0) {
         processFiles(files);
       }
-      
+
       // Clear input for next selection
-      if (fileInput.value) {
+      if(fileInput.value) {
         fileInput.value.value = '';
       }
     }
-    
-    function onDragOver(event) {
-      if (props.disabled) return;
+
+    function onDragOver() {
+      if(props.disabled) {
+        return;
+      }
       isDragOver.value = true;
     }
-    
-    function onDragLeave(event) {
+
+    function onDragLeave() {
       isDragOver.value = false;
     }
-    
+
     function onDrop(event) {
-      if (props.disabled) return;
-      
+      if(props.disabled) {
+        return;
+      }
+
       isDragOver.value = false;
       const files = event.dataTransfer.files;
-      
-      if (files && files.length > 0) {
+
+      if(files && files.length > 0) {
         processFiles(files);
       }
     }
-    
+
     function reScanFile(fileRecord) {
       emit('file-uploaded', {
-        file: new File([''], fileRecord.name, { type: fileRecord.type }),
+        file: new File([''], fileRecord.name, {type: fileRecord.type}),
         dataUrl: fileRecord.dataUrl,
         preview: fileRecord.preview,
         id: fileRecord.id,
         isRescan: true
       });
     }
-    
+
     function removeRecentFile(fileId) {
       recentFiles.value = recentFiles.value.filter(file => file.id !== fileId);
     }
-    
+
     function setError(message) {
       uploadError.value = message;
-      
+
       // Auto-clear error after 5 seconds
       setTimeout(() => {
-        if (uploadError.value === message) {
+        if(uploadError.value === message) {
           uploadError.value = null;
         }
       }, 5000);
     }
-    
+
     function clearError() {
       uploadError.value = null;
     }
-    
+
     // Step 5: Helper functions
     function formatFileSize(bytes) {
-      if (bytes === 0) return '0 Bytes';
-      
+      if(bytes === 0) {
+        return '0 Bytes';
+      }
+
       const k = 1024;
       const sizes = ['Bytes', 'KB', 'MB', 'GB'];
       const i = Math.floor(Math.log(bytes) / Math.log(k));
-      
+
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    
+
     // Step 6: Return object
     return {
       // Refs
       fileInput,
-      
+
       // State
       isDragOver,
       processing,
       recentFiles,
       uploadError,
-      
+
       // Computed
       acceptedTypesString,
       acceptedTypesDisplay,
-      
+
       // Event handlers
       triggerFileSelect,
       onFileSelect,
@@ -387,7 +418,7 @@ export default {
       reScanFile,
       removeRecentFile,
       clearError,
-      
+
       // Helpers
       formatFileSize
     };
@@ -678,17 +709,17 @@ export default {
   .drag-drop-area {
     padding: 30px 15px;
   }
-  
+
   .drag-icon {
     font-size: 24px;
   }
-  
+
   .recent-file-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .file-actions {
     align-self: stretch;
     justify-content: space-between;

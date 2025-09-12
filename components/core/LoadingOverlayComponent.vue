@@ -3,49 +3,50 @@
     v-if="showOverlay"
     class="loading-overlay-container"
     :class="overlayClasses">
-    
     <!-- Camera Loading State -->
     <div
       v-if="loadingCamera"
       class="loading-state camera-loading">
-      
       <!-- Custom Camera Spinner Slot -->
       <div class="spinner-container">
         <slot name="cameraSpinner">
-          <div class="default-spinner" :class="spinnerClasses">
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
+          <div
+            class="default-spinner"
+            :class="spinnerClasses">
+            <div class="spinner-ring" />
+            <div class="spinner-ring" />
+            <div class="spinner-ring" />
           </div>
         </slot>
       </div>
-      
+
       <!-- Loading Text -->
       <div class="loading-text camera-text">
-        {{ loadingText }}
+        {{loadingText}}
       </div>
     </div>
-    
+
     <!-- Scanning State -->
     <div
       v-if="scanning && !loadingCamera"
       class="loading-state scanning-loading">
-      
       <!-- Custom Scanner Spinner Slot -->
       <div class="spinner-container">
         <slot name="scannerSpinner">
-          <div class="default-spinner" :class="spinnerClasses">
-            <div class="spinner-pulse"></div>
+          <div
+            class="default-spinner"
+            :class="spinnerClasses">
+            <div class="spinner-pulse" />
           </div>
         </slot>
       </div>
-      
+
       <!-- Scanning Text -->
       <div class="loading-text scanning-text">
-        {{ scanningText }}
+        {{scanningText}}
       </div>
     </div>
-    
+
     <!-- Custom Content Slot -->
     <slot
       v-if="!loadingCamera && !scanning"
@@ -53,8 +54,10 @@
       <!-- Fallback if slot is used but no specific loading state -->
       <div class="loading-state generic-loading">
         <div class="spinner-container">
-          <div class="default-spinner" :class="spinnerClasses">
-            <div class="spinner-ring"></div>
+          <div
+            class="default-spinner"
+            :class="spinnerClasses">
+            <div class="spinner-ring" />
           </div>
         </div>
         <div class="loading-text">
@@ -108,11 +111,11 @@ export default {
   computed: {
     // Show overlay if any loading state is active or slots are being used
     showOverlay() {
-      return this.loadingCamera || 
-             this.scanning || 
+      return this.loadingCamera ||
+             this.scanning ||
              this.$slots.loadingContent;
     },
-    
+
     // Overlay styling classes
     overlayClasses() {
       return [
@@ -121,7 +124,7 @@ export default {
         `overlay-size-${this.size}`
       ];
     },
-    
+
     // Spinner styling classes
     spinnerClasses() {
       return [
@@ -309,19 +312,6 @@ export default {
   font-weight: 600;
 }
 
-/* State-specific styling */
-.camera-loading {
-  /* Camera loading specific styles */
-}
-
-.scanning-loading {
-  /* Scanning specific styles */
-}
-
-.camera-text {
-  /* Camera text specific styles */
-}
-
 .scanning-text {
   /* Scanning text specific styles */
   color: #4caf50;
@@ -364,11 +354,11 @@ export default {
     max-width: 250px;
     padding: 16px;
   }
-  
+
   .loading-text {
     font-size: 14px;
   }
-  
+
   .overlay-size-large .loading-text {
     font-size: 16px;
   }
@@ -379,7 +369,7 @@ export default {
   .overlay-pos-top {
     padding-top: calc(env(safe-area-inset-top, 0px) + 60px);
   }
-  
+
   .overlay-pos-bottom {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
   }
@@ -393,11 +383,11 @@ export default {
     border-color: #000 !important;
     background: #000 !important;
   }
-  
+
   .overlay-bg-dark {
     background: rgba(0, 0, 0, 0.9);
   }
-  
+
   .loading-text {
     font-weight: bold;
   }

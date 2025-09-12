@@ -10,9 +10,8 @@
         :auto-start="autoStartCamera"
         @stream-ready="onCameraReady"
         @camera-error="onCameraError"
-        @capabilities-detected="onCapabilitiesDetected"
-      />
-      
+        @capabilities-detected="onCapabilitiesDetected" />
+
       <!-- Region Overlay (QR Box) -->
       <RegionOverlayComponent
         v-if="showCamera && showQrBox"
@@ -20,22 +19,19 @@
         :guide-color="guideColor"
         :client-width="videoSize.width"
         :client-height="videoSize.height"
-        @region-calculated="onRegionCalculated"
-      />
-      
+        @region-calculated="onRegionCalculated" />
+
       <!-- Loading Overlay -->
       <LoadingOverlayComponent
         v-if="showCamera && cameraLoading"
-        :message="loadingMessage"
-      />
-      
+        :message="loadingMessage" />
+
       <!-- Error Overlay -->
       <ErrorDisplayComponent
         v-if="showCamera && cameraError"
         :error="cameraError"
         :show-retry="true"
-        @retry="retryCameraAccess"
-      />
+        @retry="retryCameraAccess" />
     </div>
 
     <!-- Camera Controls -->
@@ -48,8 +44,7 @@
       :zoom-level="zoomLevel"
       @device-changed="onDeviceChanged"
       @torch-toggled="onTorchToggled"
-      @zoom-changed="onZoomChanged"
-    />
+      @zoom-changed="onZoomChanged" />
 
     <!-- Scanner Controls -->
     <ScannerControlsComponent
@@ -61,28 +56,24 @@
       @formats-changed="onFormatsChanged"
       @mode-changed="onModeChanged"
       @continuous-changed="onContinuousChanged"
-      @scan-triggered="triggerManualScan"
-    />
+      @scan-triggered="triggerManualScan" />
 
     <!-- Upload Component -->
     <UploadComponent
       v-if="showUpload && !hideUploadButton"
-      @file-selected="onFileSelected"
-    />
+      @file-selected="onFileSelected" />
 
     <!-- Tip Text -->
     <TipTextComponent
       v-if="showTipText && tipText"
-      :tip-text="tipText"
-    />
+      :tip-text="tipText" />
 
     <!-- Results Display -->
     <ResultsDisplayComponent
       v-if="showResults && scanResults.length > 0"
       :results="scanResults"
       @result-selected="onResultSelected"
-      @clear-results="clearResults"
-    />
+      @clear-results="clearResults" />
 
     <!-- Scanning Orchestrator (Renderless) -->
     <ScanningOrchestratorComponent
@@ -91,14 +82,13 @@
       :mode="mode"
       :continuous="continuousScanning"
       :scan-interval="scanInterval"
-      :plugin-options="{ 
+      :plugin-options="{
         pdf417_enhanced: { licenseKey: dynamsoft.licenseKey },
         mrz: { licenseKey: dynamsoft.licenseKey }
       }"
       @result="onScanResult"
       @error="onScanError"
-      @progress="onScanProgress"
-    />
+      @progress="onScanProgress" />
   </div>
 </template>
 
@@ -106,46 +96,48 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue';
 
 // Import all the modular components
-import CameraVideoComponent from './core/CameraVideoComponent.vue';
 import CameraControlsComponent from './core/CameraControlsComponent.vue';
+import CameraVideoComponent from './core/CameraVideoComponent.vue';
 import ErrorDisplayComponent from './core/ErrorDisplayComponent.vue';
 import LoadingOverlayComponent from './core/LoadingOverlayComponent.vue';
 import RegionOverlayComponent from './core/RegionOverlayComponent.vue';
 import ResultsDisplayComponent from './core/ResultsDisplayComponent.vue';
 import ScannerControlsComponent from './core/ScannerControlsComponent.vue';
-import ScanningOrchestratorComponent from './core/ScanningOrchestratorComponent.vue';
+import ScanningOrchestratorComponent from
+  './core/ScanningOrchestratorComponent.vue';
 import TipTextComponent from './core/TipTextComponent.vue';
 import UploadComponent from './core/UploadComponent.vue';
 
 export default {
   name: 'OpticalScannerComponent',
-  
+
   components: {
     CameraVideoComponent,
     CameraControlsComponent,
-    ScannerControlsComponent,
-    UploadComponent,
-    RegionOverlayComponent,
-    LoadingOverlayComponent,
     ErrorDisplayComponent,
+    LoadingOverlayComponent,
+    RegionOverlayComponent,
     ResultsDisplayComponent,
+    ScannerControlsComponent,
+    ScanningOrchestratorComponent,
     TipTextComponent,
-    ScanningOrchestratorComponent
+    UploadComponent,
   },
 
   props: {
     dynamsoft: {
       type: Object,
-      default: () => ({ licenseKey: null })
+      default: () => ({licenseKey: null})
     },
     // === Backward Compatibility Props ===
     // From bedrock-vue-barcode-scanner
+    // All supported formats
     formatsToSupport: {
       type: Array,
-      default: () => ['qr_code', 'pdf417', 'pdf417_enhanced', 'mrz'] // All supported formats
+      default: () => ['qr_code', 'pdf417', 'pdf417_enhanced', 'mrz']
     },
     tipText: {
       type: String,
@@ -159,7 +151,7 @@ export default {
       type: Boolean,
       default: false
     },
-    
+
     // From bedrock-vue-pdf417
     pdf417: {
       type: Object,
@@ -178,7 +170,7 @@ export default {
     mode: {
       type: String,
       default: 'first',
-      validator: (value) => ['first', 'all', 'exhaustive'].includes(value)
+      validator: value => ['first', 'all', 'exhaustive'].includes(value)
     },
     continuousScanning: {
       type: Boolean,
@@ -217,12 +209,12 @@ export default {
   },
 
   emits: [
-    'result',          // Backward compatible result format
-    'error',           // Error events
-    'close',           // Close/cancel events
-    'camera-ready',    // Camera initialization
-    'camera-error',    // Camera errors
-    'scanning',         // Scanning state changes
+    'result', // Backward compatible result format
+    'error', // Error events
+    'close', // Close/cancel events
+    'camera-ready', // Camera initialization
+    'camera-error', // Camera errors
+    'scanning', // Scanning state changes
     'torch-changed',
     'formats-changed',
     'mode-changed',
@@ -232,7 +224,7 @@ export default {
     'result-selected'
   ],
 
-  setup(props, { emit, expose }) {
+  setup(props, {emit, expose}) {
     // === Reactive State ===
     // Camera state
     const cameraLoading = ref(false);
@@ -241,23 +233,23 @@ export default {
     const availableCameras = ref([]);
     const currentDeviceId = ref(null);
     const zoomLevel = ref(1);
-    
+
     // Video/scanning state
-    const videoSize = reactive({ width: 640, height: 480 });
+    const videoSize = reactive({width: 640, height: 480});
     const scanSource = ref(null);
     const isScanning = ref(false);
     const scanResults = ref([]);
     const loadingMessage = ref('Loading camera...');
-    
+
     // === Component Refs ===
     const cameraVideo = ref(null);
-    
+
     // === Computed Properties ===
     const cameraConstraints = computed(() => ({
       video: {
         facingMode: 'environment', // Back camera preferred
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
+        width: {ideal: 1280},
+        height: {ideal: 720}
       }
     }));
 
@@ -267,14 +259,14 @@ export default {
     function onCameraReady({stream, videoElement}) {
       cameraLoading.value = false;
       cameraError.value = null;
-      
+
       // Update video size for overlay calculations
       // Wait for video metadata to be fully loaded
-      if (videoElement) {
+      if(videoElement) {
         videoElement.addEventListener('loadedmetadata', () => {
-         videoSize.width = videoElement.videoWidth || 640;
-         videoSize.height = videoElement.videoHeight || 480;
-       });
+          videoSize.width = videoElement.videoWidth || 640;
+          videoSize.height = videoElement.videoHeight || 480;
+        });
       }
 
       // Set scan source for orchestrator
@@ -287,51 +279,52 @@ export default {
     function onCameraError(error) {
       cameraLoading.value = false;
       cameraError.value = error;
-      
+
       // Emit backward-compatible event
       emit('camera-error', error);
     }
 
-    function onCapabilitiesDetected({ capabilities }) {
+    function onCapabilitiesDetected({capabilities}) {
       cameraCapabilities.value = capabilities;
     }
 
     // Camera Control Events
-    function onDeviceChanged({ deviceId }) {
+    function onDeviceChanged({deviceId}) {
       currentDeviceId.value = deviceId;
       // Restart camera with new device
-      if (cameraVideo.value) {
+      if(cameraVideo.value) {
         cameraVideo.value.stopCamera();
         cameraVideo.value.startCamera();
       }
     }
 
-    function onTorchToggled({ torchOn }) {
+    function onTorchToggled({torchOn}) {
       // Update internal state and emit for parent
       // Note: Parent can listen to this if they want to sync their torchOn prop
-      emit('torch-changed', { torchOn });
+      emit('torch-changed', {torchOn});
     }
 
-    function onZoomChanged({ zoomLevel: newZoomLevel }) {
+    function onZoomChanged({zoomLevel: newZoomLevel}) {
       zoomLevel.value = newZoomLevel;
     }
 
     // Scanner Control Events
-    function onFormatsChanged({ formats }) {
-      // Parent should update formatsToSupport prop, but emit event for flexibility
-      emit('formats-changed', { formats });
+    function onFormatsChanged({formats}) {
+      // Parent should update formatsToSupport prop,
+      // but emit event for flexibility
+      emit('formats-changed', {formats});
     }
 
-    function onModeChanged({ mode }) {
-      emit('mode-changed', { mode });
+    function onModeChanged({mode}) {
+      emit('mode-changed', {mode});
     }
 
-    function onContinuousChanged({ continuous }) {
-      emit('continuous-changed', { continuous });
+    function onContinuousChanged({continuous}) {
+      emit('continuous-changed', {continuous});
     }
 
     function triggerManualScan() {
-      if (scanSource.value && !isScanning.value) {
+      if(scanSource.value && !isScanning.value) {
         // The ScanningOrchestratorComponent will handle the actual scan
         // We just need to ensure it has the current source
         emit('scan-triggered');
@@ -339,19 +332,19 @@ export default {
     }
 
     // Upload Events
-    function onFileSelected({ file }) {
+    function onFileSelected({file}) {
       // Set file as scan source
       scanSource.value = file;
-      
+
       // Optionally emit for parent awareness
-      emit('file-selected', { file });
+      emit('file-selected', {file});
     }
 
     // Scanning Orchestrator Events
-    function onScanResult({ results, source }) {
+    function onScanResult({results}) {
       isScanning.value = false;
       scanResults.value = results;
-      
+
       // Emit backward-compatible result format
       // Transform to match existing bedrock-vue-barcode-scanner format
       const compatibleResults = results.map(result => ({
@@ -359,22 +352,22 @@ export default {
         format: result.format,
         ...result // Include any additional properties
       }));
-      
+
       emit('result', compatibleResults);
       emit('scanning', false);
     }
 
-    function onScanError({ error, source, type }) {
+    function onScanError({error, source, type}) {
       isScanning.value = false;
-      
+
       // Emit backward-compatible error
-      emit('error', { error, source, type });
+      emit('error', {error, source, type});
       emit('scanning', false);
     }
 
-    function onScanProgress({ scanning, format }) {
+    function onScanProgress({scanning}) {
       isScanning.value = scanning;
-      
+
       // Emit scanning state change
       emit('scanning', scanning);
     }
@@ -389,7 +382,7 @@ export default {
       scanResults.value = [];
     }
 
-    function onRegionCalculated({ region }) {
+    function onRegionCalculated({region}) {
       // Store region data if needed for advanced scanning
       // This could be used to focus scanning on specific areas
     }
@@ -397,56 +390,57 @@ export default {
     // === Watchers ===
     function setupWatchers() {
       // Watch for torch changes from parent
-      watch(() => props.torchOn, (newTorchState) => {
-        if (cameraVideo.value && cameraCapabilities.value?.torch) {
+      watch(() => props.torchOn, newTorchState => {
+        if(cameraVideo.value && cameraCapabilities.value?.torch) {
           // Apply torch setting to camera
           // This would typically be handled by the camera component
         }
       });
-      
+
       // Watch for format changes
-      watch(() => props.formatsToSupport, (newFormats) => {
+      watch(() => props.formatsToSupport, newFormats => {
         // The ScanningOrchestratorComponent will react to this automatically
         // via its props reactivity
-      }, { deep: true });
+      }, {deep: true});
     }
 
     // === Utility Methods ===
     function retryCameraAccess() {
       cameraError.value = null;
       cameraLoading.value = true;
-      
-      if (cameraVideo.value) {
+
+      if(cameraVideo.value) {
         cameraVideo.value.startCamera();
       }
     }
 
     function cleanup() {
       // Stop camera if active
-      if (cameraVideo.value) {
+      if(cameraVideo.value) {
         cameraVideo.value.stopCamera();
       }
-      
+
       // Clear any timers or resources
       scanResults.value = [];
       cameraError.value = null;
     }
 
     function startScanning() {
-      if (!scanSource.value) {
-        emit('error', { 
-          error: new Error('No scan source available'), 
-          type: 'no_source' 
+      if(!scanSource.value) {
+        emit('error', {
+          error: new Error('No scan source available'),
+          type: 'no_source'
         });
         return;
       }
-      
+
       // Trigger manual scan - the orchestrator will handle it
       triggerManualScan();
     }
 
     function stopScanning() {
-      // The orchestrator component will handle stopping via its internal abort controller
+      // The orchestrator component will handle stopping via its internal
+      // abort controller
       isScanning.value = false;
       emit('scanning', false);
     }
@@ -456,16 +450,16 @@ export default {
       scanResults.value = [];
       cameraError.value = null;
       isScanning.value = false;
-      
+
       // Optionally restart camera
-      if (cameraVideo.value && props.autoStartCamera) {
+      if(cameraVideo.value && props.autoStartCamera) {
         retryCameraAccess();
       }
     }
 
     function captureCurrentFrame() {
       // Delegate to camera component
-      if (cameraVideo.value) {
+      if(cameraVideo.value) {
         return cameraVideo.value.captureFrame();
       }
       throw new Error('No active camera for frame capture');
@@ -474,11 +468,11 @@ export default {
     // === Lifecycle Hooks ===
     onMounted(() => {
       // Initialize any required state
-      if (props.autoStartCamera) {
+      if(props.autoStartCamera) {
         // Camera will auto-start via CameraVideoComponent's autoStart prop
         cameraLoading.value = true;
       }
-      
+
       // Set up any watchers for prop changes
       setupWatchers();
     });
@@ -494,14 +488,14 @@ export default {
       startScanning,
       stopScanning,
       resetScanner,
-      
+
       // Camera methods
       captureCurrentFrame,
       retryCameraAccess,
-      
+
       // State access
       clearResults,
-      
+
       // Getters for current state
       isScanning: () => isScanning.value,
       hasResults: () => scanResults.value.length > 0,
@@ -524,10 +518,10 @@ export default {
       isScanning,
       scanResults,
       loadingMessage,
-      
+
       // Computed
       cameraConstraints,
-      
+
       // Event handlers
       onCameraReady,
       onCameraError,
@@ -547,7 +541,7 @@ export default {
       clearResults,
       onRegionCalculated,
       retryCameraAccess,
-      
+
       // Exposed utility methods (for template use if needed)
       resetScanner
     };
@@ -586,7 +580,7 @@ export default {
     border-radius: 0;
     box-shadow: none;
   }
-  
+
   .scanner-main-area {
     min-height: 250px;
   }

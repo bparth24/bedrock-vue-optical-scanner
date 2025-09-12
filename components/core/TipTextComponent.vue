@@ -4,29 +4,34 @@
     ref="tipContainer"
     :class="['tip-text-container', positionClass]"
     :style="computedStyle">
-    
     <!-- Tip Text Content -->
     <div class="tip-text-content">
       <!-- Icon (optional) -->
-      <div v-if="showIcon" class="tip-icon">
-        {{ getPositionIcon() }}
+      <div
+        v-if="showIcon"
+        class="tip-icon">
+        {{getPositionIcon()}}
       </div>
-      
+
       <!-- Text Content -->
-      <div class="tip-text" v-html="formattedText"></div>
-      
+      <div
+        class="tip-text"
+        v-html="formattedText" />
+
       <!-- Optional close button for persistent tips -->
       <button
         v-if="showCloseButton"
-        @click="hideTip"
         class="tip-close-button"
-        title="Close tip">
+        title="Close tip"
+        @click="hideTip">
         ✕
       </button>
     </div>
-    
+
     <!-- Tip Arrow (for positioned tips) -->
-    <div v-if="showArrow" class="tip-arrow"></div>
+    <div
+      v-if="showArrow"
+      class="tip-arrow" />
   </div>
 </template>
 
@@ -34,7 +39,8 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { ref, computed, watch, nextTick } from 'vue';
+import {computed, nextTick, ref, watch} from 'vue';
+import DOMPurify from 'dompurify';
 
 export default {
   name: 'TipTextComponent',
@@ -46,7 +52,7 @@ export default {
     position: {
       type: String,
       default: 'bottom',
-      validator: (value) => ['top', 'bottom', 'center', 'custom'].includes(value)
+      validator: value => ['top', 'bottom', 'center', 'custom'].includes(value)
     },
     regionTop: {
       type: Number,
@@ -84,79 +90,92 @@ export default {
     animation: {
       type: String,
       default: 'fade',
-      validator: (value) => ['fade', 'slide', 'bounce', 'none'].includes(value)
+      validator: value => ['fade', 'slide', 'bounce', 'none'].includes(value)
     },
     theme: {
       type: String,
       default: 'default',
-      validator: (value) => ['default', 'dark', 'light', 'warning', 'error', 'success'].includes(value)
+      validator: value =>
+        [
+          'default',
+          'dark',
+          'light',
+          'warning',
+          'error',
+          'success'
+        ].includes(value)
     }
   },
   emits: [
-    'hidden',        // When tip is hidden (via close button or auto-hide)
-    'shown',         // When tip becomes visible
-    'clicked'        // When tip text is clicked
+    'hidden', // When tip is hidden (via close button or auto-hide)
+    'shown', // When tip becomes visible
+    'clicked' // When tip text is clicked
   ],
-  setup(props, { emit }) {
+  setup(props, {emit}) {
     // Step 1: Reactive state
     const tipContainer = ref(null);
     const isManuallyHidden = ref(false);
-    
+
     // Step 2: Auto-hide functionality
     let autoHideTimer = null;
-    
+
     function startAutoHideTimer() {
-      if (!props.autoHide || autoHideTimer) return;
-      
+      if(!props.autoHide || autoHideTimer) {
+        return;
+      }
+
       autoHideTimer = setTimeout(() => {
         hideTip();
       }, props.autoHideDelay);
     }
-    
+
     function clearAutoHideTimer() {
-      if (autoHideTimer) {
+      if(autoHideTimer) {
         clearTimeout(autoHideTimer);
         autoHideTimer = null;
       }
     }
-    
-    // Step 3: Computed properties
+
     const formattedText = computed(() => {
-      if (!props.tipText) return '';
-      
+      if(!props.tipText) {
+        return '';
+      }
+
       // Support for simple HTML formatting (bold, italic, line breaks)
-      return props.tipText
+      const rawHtml = props.tipText
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/\n/g, '<br>');
+      // Sanitize HTML to prevent XSS
+      return DOMPurify.sanitize(rawHtml);
     });
-    
+
     const positionClass = computed(() => {
       return `tip-position-${props.position}`;
     });
-    
+
     const computedStyle = computed(() => {
-      const style = { ...props.customStyle };
-      
+      const style = {...props.customStyle};
+
       // Position-specific styling
-      if (props.position === 'bottom' && props.regionTop !== null) {
+      if(props.position === 'bottom' && props.regionTop !== null) {
         // Backward compatibility: position relative to scan region
         style.bottom = `calc(${props.regionTop}% - 30px)`;
         style.position = 'absolute';
         style.left = '50%';
         style.transform = 'translateX(-50%)';
-      } else if (props.position === 'top' && props.regionTop !== null) {
+      } else if(props.position === 'top' && props.regionTop !== null) {
         // Position above scan region
         style.top = `calc(${100 - props.regionTop}% + 30px)`;
         style.position = 'absolute';
         style.left = '50%';
         style.transform = 'translateX(-50%)';
-      } else if (props.position === 'center') {
+      } else if(props.position === 'center') {
         style.position = 'absolute';
         style.top = '50%';
         style.left = '50%';
         style.transform = 'translate(-50%, -50%)';
-      } else if (props.position === 'custom') {
+      } else if(props.position === 'custom') {
         // Custom positioning via customStyle prop
         style.position = style.position || 'absolute';
       } else {
@@ -166,31 +185,31 @@ export default {
         style.left = '50%';
         style.transform = 'translateX(-50%)';
       }
-      
+
       // Theme-based styling
       const themeStyles = getThemeStyles();
       Object.assign(style, themeStyles);
-      
+
       // Animation classes will be handled by CSS
-      
+
       return style;
     });
-    
+
     const actuallyVisible = computed(() => {
       return props.visible && !isManuallyHidden.value && props.tipText;
     });
-    
+
     // Step 4: Helper functions
     function getPositionIcon() {
       const iconMap = {
-        'top': '↑',
-        'bottom': '↓',
-        'center': '●',
-        'custom': '📍'
+        top: '↑',
+        bottom: '↓',
+        center: '●',
+        custom: '📍'
       };
       return iconMap[props.position] || '💡';
     }
-    
+
     function getThemeStyles() {
       const themes = {
         default: {
@@ -225,34 +244,34 @@ export default {
           borderColor: '#28a745'
         }
       };
-      
+
       return themes[props.theme] || themes.default;
     }
-    
+
     function hideTip() {
       isManuallyHidden.value = true;
       clearAutoHideTimer();
       emit('hidden');
     }
-    
+
     function showTip() {
       isManuallyHidden.value = false;
-      if (props.autoHide) {
+      if(props.autoHide) {
         nextTick(() => {
           startAutoHideTimer();
         });
       }
       emit('shown');
     }
-    
+
     function onTipClick() {
       emit('clicked');
     }
-    
+
     // Step 5: Watchers
-    watch(actuallyVisible, (isVisible) => {
-      if (isVisible) {
-        if (props.autoHide) {
+    watch(actuallyVisible, isVisible => {
+      if(isVisible) {
+        if(props.autoHide) {
           nextTick(() => {
             startAutoHideTimer();
           });
@@ -261,25 +280,25 @@ export default {
       } else {
         clearAutoHideTimer();
       }
-    }, { immediate: true });
-    
-    watch(() => props.visible, (isVisible) => {
-      if (isVisible) {
+    }, {immediate: true});
+
+    watch(() => props.visible, isVisible => {
+      if(isVisible) {
         // Reset manual hide when visibility is toggled back on
         isManuallyHidden.value = false;
       }
     });
-    
+
     // Step 6: Lifecycle cleanup
     const cleanup = () => {
       clearAutoHideTimer();
     };
-    
+
     // Return cleanup function for parent to call if needed
     const beforeUnmount = () => {
       cleanup();
     };
-    
+
     // Step 7: Return reactive state and methods for template
     return {
       tipContainer,
@@ -304,7 +323,8 @@ export default {
 .tip-text-container {
   z-index: 1000;
   pointer-events: auto;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
   max-width: 90vw;
   word-wrap: break-word;
 }
@@ -470,26 +490,26 @@ export default {
   .tip-text-container {
     max-width: 95vw;
   }
-  
+
   .tip-text-content {
     padding: 10px 14px;
     font-size: 13px;
   }
-  
+
   .tip-text {
     font-size: 13px;
     line-height: 1.3;
   }
-  
+
   .tip-icon {
     font-size: 14px;
   }
-  
+
   /* Adjust positioning for mobile */
   .tip-position-bottom {
     bottom: 10px !important;
   }
-  
+
   .tip-position-top {
     top: 10px !important;
   }
@@ -499,11 +519,11 @@ export default {
   .tip-text-content {
     padding: 8px 12px;
   }
-  
+
   .tip-text {
     font-size: 12px;
   }
-  
+
   .tip-close-button {
     font-size: 14px;
     padding: 2px;
@@ -523,11 +543,11 @@ export default {
   .tip-text-container {
     animation: none !important;
   }
-  
+
   .tip-text-content {
     transition: none !important;
   }
-  
+
   .tip-text-content:hover {
     transform: none !important;
   }

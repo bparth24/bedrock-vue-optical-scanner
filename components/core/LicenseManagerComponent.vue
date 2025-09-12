@@ -1,75 +1,109 @@
 <template>
   <div class="license-manager-container">
     <!-- License Status Display (only show if requested) -->
-    <div v-if="showStatus" class="license-status">
+    <div
+      v-if="showStatus"
+      class="license-status">
       <div class="license-indicator">
         <div :class="['status-icon', statusClass]">
-          {{ getStatusIcon() }}
+          {{getStatusIcon()}}
         </div>
         <div class="status-text">
-          <div class="status-label">{{ getStatusLabel() }}</div>
-          <div v-if="statusMessage" class="status-message">{{ statusMessage }}</div>
+          <div class="status-label">
+            {{getStatusLabel()}}
+          </div>
+          <div
+            v-if="statusMessage"
+            class="status-message">
+            {{statusMessage}}
+          </div>
         </div>
       </div>
-      
+
       <!-- License Details (when expanded) -->
-      <div v-if="showDetails" class="license-details">
-        <div class="detail-item" v-if="licenseInfo.type">
+      <div
+        v-if="showDetails"
+        class="license-details">
+        <div
+          v-if="licenseInfo.type"
+          class="detail-item">
           <span class="detail-label">Type:</span>
-          <span class="detail-value">{{ licenseInfo.type }}</span>
+          <span class="detail-value">{{licenseInfo.type}}</span>
         </div>
-        <div class="detail-item" v-if="licenseInfo.expiryDate">
+        <div
+          v-if="licenseInfo.expiryDate"
+          class="detail-item">
           <span class="detail-label">Expires:</span>
-          <span class="detail-value">{{ formatDate(licenseInfo.expiryDate) }}</span>
+          <span class="detail-value">
+            {{formatDate(licenseInfo.expiryDate)}}
+          </span>
         </div>
-        <div class="detail-item" v-if="licenseInfo.organization">
+        <div
+          v-if="licenseInfo.organization"
+          class="detail-item">
           <span class="detail-label">Organization:</span>
-          <span class="detail-value">{{ licenseInfo.organization }}</span>
+          <span class="detail-value">{{licenseInfo.organization}}</span>
         </div>
-        <div class="detail-item" v-if="licenseInfo.version">
+        <div
+          v-if="licenseInfo.version"
+          class="detail-item">
           <span class="detail-label">Version:</span>
-          <span class="detail-value">{{ licenseInfo.version }}</span>
+          <span class="detail-value">{{licenseInfo.version}}</span>
         </div>
       </div>
-      
+
       <!-- Action Buttons -->
-      <div v-if="showActions" class="license-actions">
+      <div
+        v-if="showActions"
+        class="license-actions">
         <button
           v-if="status === 'error' || status === 'expired'"
-          @click="retryInitialization"
           :disabled="initializing"
-          class="action-button retry-button">
+          class="action-button retry-button"
+          @click="retryInitialization">
           <span class="button-icon">🔄</span>
-          {{ initializing ? 'Retrying...' : 'Retry' }}
+          {{initializing ? 'Retrying...' : 'Retry'}}
         </button>
-        
+
         <button
-          @click="validateLicense"
           :disabled="initializing || !isInitialized"
-          class="action-button validate-button">
+          class="action-button validate-button"
+          @click="validateLicense">
           <span class="button-icon">✓</span>
           Validate
         </button>
-        
+
         <button
           v-if="showDetails"
-          @click="toggleDetails"
-          class="action-button details-button">
-          <span class="button-icon">{{ showDetails ? '▲' : '▼' }}</span>
-          {{ showDetails ? 'Hide' : 'Show' }} Details
+          class="action-button details-button"
+          @click="toggleDetails">
+          <span class="button-icon">{{showDetails ? '▲' : '▼'}}</span>
+          {{showDetails ? 'Hide' : 'Show'}} Details
         </button>
       </div>
     </div>
-    
+
     <!-- Error Display -->
-    <div v-if="lastError && showError" class="license-error">
+    <div
+      v-if="lastError && showError"
+      class="license-error">
       <div class="error-content">
-        <div class="error-icon">⚠️</div>
-        <div class="error-message">
-          <div class="error-title">License Error</div>
-          <div class="error-details">{{ getErrorMessage(lastError) }}</div>
+        <div class="error-icon">
+          ⚠️
         </div>
-        <button @click="dismissError" class="error-dismiss">✕</button>
+        <div class="error-message">
+          <div class="error-title">
+            License Error
+          </div>
+          <div class="error-details">
+            {{getErrorMessage(lastError)}}
+          </div>
+        </div>
+        <button
+          class="error-dismiss"
+          @click="dismissError">
+          ✕
+        </button>
       </div>
     </div>
   </div>
@@ -79,7 +113,7 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+import {computed, onMounted, reactive, ref, watch} from 'vue';
 
 export default {
   name: 'LicenseManagerComponent',
@@ -87,7 +121,7 @@ export default {
     pdf417Config: {
       type: Object,
       required: true,
-      validator: (config) => {
+      validator: config => {
         return config && (config.license || config.licenseServer);
       }
     },
@@ -122,14 +156,15 @@ export default {
     }
   },
   emits: [
-    'license-initialized',    // { success: boolean, info: Object }
-    'license-error',          // { error: Error, retryable: boolean }
-    'license-validated',      // { valid: boolean, info: Object }
-    'status-changed'          // { status: string, message: string }
+    'license-initialized', // { success: boolean, info: Object }
+    'license-error', // { error: Error, retryable: boolean }
+    'license-validated', // { valid: boolean, info: Object }
+    'status-changed' // { status: string, message: string }
   ],
-  setup(props, { emit, expose }) {
+  setup(props, {emit, expose}) {
     // Step 1: Reactive state
-    const status = ref('uninitialized'); // 'uninitialized', 'initializing', 'initialized', 'error', 'expired'
+    // 'uninitialized', 'initializing', 'initialized', 'error', 'expired'
+    const status = ref('uninitialized');
     const statusMessage = ref('');
     const initializing = ref(false);
     const validating = ref(false);
@@ -137,7 +172,7 @@ export default {
     const retryCount = ref(0);
     const showDetails = ref(false);
     const showError = ref(true);
-    
+
     // License information
     const licenseInfo = reactive({
       type: '',
@@ -147,249 +182,261 @@ export default {
       features: [],
       initialized: false
     });
-    
+
     // Step 2: Module-level variables for Dynamsoft objects
     let BarcodeReader = null;
     let BarcodeScanner = null;
     let retryTimer = null;
-    
+
     // Step 3: Computed properties
     const isInitialized = computed(() => {
       return status.value === 'initialized' && licenseInfo.initialized;
     });
-    
+
     const statusClass = computed(() => {
       return `status-${status.value}`;
     });
-    
+
     const effectiveLicenseServer = computed(() => {
       return props.licenseServer || props.pdf417Config.licenseServer;
     });
-    
+
     const effectiveLicense = computed(() => {
       return props.pdf417Config.license;
     });
-    
+
     // Step 4: Main license management functions
     async function initializeLicense() {
-      if (initializing.value) return;
-      
+      if(initializing.value) {
+        return;
+      }
+
       initializing.value = true;
       status.value = 'initializing';
       statusMessage.value = 'Initializing Dynamsoft license...';
       lastError.value = null;
-      
+
       emit('status-changed', {
         status: status.value,
         message: statusMessage.value
       });
-      
+
       try {
         // Import Dynamsoft modules
         await importDynamsoftModules();
-        
+
         // Initialize license
-        if (effectiveLicenseServer.value) {
+        if(effectiveLicenseServer.value) {
           await initializeWithLicenseServer();
-        } else if (effectiveLicense.value) {
+        } else if(effectiveLicense.value) {
           await initializeWithLicenseKey();
         } else {
           throw new Error('No license key or license server provided');
         }
-        
+
         // Validate the license
         await performLicenseValidation();
-        
+
         // Success
         status.value = 'initialized';
         statusMessage.value = 'License initialized successfully';
         licenseInfo.initialized = true;
         retryCount.value = 0;
-        
+
         emit('license-initialized', {
           success: true,
-          info: { ...licenseInfo }
+          info: {...licenseInfo}
         });
-        
+
         emit('status-changed', {
           status: status.value,
           message: statusMessage.value
         });
-        
-      } catch (error) {
+
+      } catch(error) {
         console.error('License initialization failed:', error);
-        
+
         status.value = 'error';
         statusMessage.value = 'License initialization failed';
         lastError.value = error;
         showError.value = true;
-        
+
         const isRetryable = isRetryableError(error);
-        
+
         emit('license-error', {
           error,
           retryable: isRetryable
         });
-        
+
         emit('status-changed', {
           status: status.value,
           message: statusMessage.value
         });
-        
+
         // Auto-retry for retryable errors
-        if (isRetryable && retryCount.value < props.retryAttempts) {
+        if(isRetryable && retryCount.value < props.retryAttempts) {
           scheduleRetry();
         }
-        
+
       } finally {
         initializing.value = false;
       }
     }
-    
+
     async function importDynamsoftModules() {
       try {
         // Dynamic import based on what's available
-        if (typeof window !== 'undefined') {
+        if(typeof window !== 'undefined') {
           // Try to import from global modules first
-          if (window.Dynamsoft?.DBR?.BarcodeReader) {
+          if(window.Dynamsoft?.DBR?.BarcodeReader) {
             BarcodeReader = window.Dynamsoft.DBR.BarcodeReader;
           } else {
             // Try to import via ES modules
-            const { BarcodeReader: DBR } = await import('dynamsoft-javascript-barcode');
+            const dbrModule = await import(
+              'dynamsoft-javascript-barcode'
+            );
+            const DBR = dbrModule.BarcodeReader;
             BarcodeReader = DBR;
           }
-          
+
           // Try to import BarcodeScanner if available
-          if (window.Dynamsoft?.DCE?.CameraEnhancer) {
-            const { BarcodeScanner: BS } = await import('dynamsoft-javascript-barcode');
+          if(window.Dynamsoft?.DCE?.CameraEnhancer) {
+            const dbrModule2 = await import(
+              'dynamsoft-javascript-barcode'
+            );
+            const BS = dbrModule2.BarcodeScanner;
             BarcodeScanner = BS;
           }
         }
-        
-        if (!BarcodeReader) {
+
+        if(!BarcodeReader) {
           throw new Error('Dynamsoft BarcodeReader not available');
         }
-        
+
         // Set engine resource path if not already set
-        if (!BarcodeReader.engineResourcePath) {
-          BarcodeReader.engineResourcePath = 
+        if(!BarcodeReader.engineResourcePath) {
+          BarcodeReader.engineResourcePath =
             'https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.1/dist/';
         }
-        
-      } catch (error) {
+
+      } catch(error) {
         throw new Error(`Failed to import Dynamsoft modules: ${error.message}`);
       }
     }
-    
+
     async function initializeWithLicenseServer() {
-      if (!effectiveLicenseServer.value) {
+      if(!effectiveLicenseServer.value) {
         throw new Error('License server URL not provided');
       }
-      
+
       statusMessage.value = 'Connecting to license server...';
-      
+
       try {
         // Initialize with license server
         await BarcodeReader.initLicense(effectiveLicenseServer.value);
-        
+
         licenseInfo.type = 'Server-based';
         licenseInfo.organization = 'Via License Server';
-        
-      } catch (error) {
-        throw new Error(`License server initialization failed: ${error.message}`);
+
+      } catch(error) {
+        throw new Error(
+          'License server initialization failed: ' + error.message
+        );
       }
     }
-    
+
     async function initializeWithLicenseKey() {
-      if (!effectiveLicense.value) {
+      if(!effectiveLicense.value) {
         throw new Error('License key not provided');
       }
-      
+
       statusMessage.value = 'Validating license key...';
-      
+
       try {
         // Set license key directly
         BarcodeReader.license = effectiveLicense.value;
-        
+
         // Test by creating an instance
         const testReader = await BarcodeReader.createInstance();
         await testReader.destroyContext();
-        
+
         licenseInfo.type = 'License Key';
         licenseInfo.organization = 'Direct License';
-        
-      } catch (error) {
+
+      } catch(error) {
         throw new Error(`License key validation failed: ${error.message}`);
       }
     }
-    
+
     async function performLicenseValidation() {
       statusMessage.value = 'Validating license...';
-      
+
       try {
         // Create a test instance to validate
         const testReader = await BarcodeReader.createInstance();
-        
+
         // Get version info if available
-        if (testReader.getVersion) {
+        if(testReader.getVersion) {
           licenseInfo.version = testReader.getVersion();
         }
-        
+
         await testReader.destroyContext();
-        
+
         // Check for license expiry (if available in future Dynamsoft versions)
         // This is a placeholder for future enhancement
         checkLicenseExpiry();
-        
-      } catch (error) {
+
+      } catch(error) {
         throw new Error(`License validation failed: ${error.message}`);
       }
     }
-    
+
     function checkLicenseExpiry() {
       // Placeholder for future license expiry checking
       // Dynamsoft doesn't currently expose expiry date via API
       // This could be enhanced in future versions
-      
+
       // For now, we'll assume license is valid if we got this far
       licenseInfo.expiryDate = null;
     }
-    
+
     async function validateLicense() {
-      if (validating.value) return false;
-      
+      if(validating.value) {
+        return false;
+      }
+
       validating.value = true;
       statusMessage.value = 'Validating license...';
-      
+
       try {
         // Test license by creating and destroying an instance
         const testReader = await BarcodeReader.createInstance();
         await testReader.destroyContext();
-        
+
         emit('license-validated', {
           valid: true,
-          info: { ...licenseInfo }
+          info: {...licenseInfo}
         });
-        
+
         statusMessage.value = 'License validation successful';
         return true;
-        
-      } catch (error) {
+
+      } catch(error) {
         console.error('License validation failed:', error);
-        
+
         emit('license-validated', {
           valid: false,
-          error: error
+          error
         });
-        
+
         statusMessage.value = 'License validation failed';
         return false;
-        
+
       } finally {
         validating.value = false;
       }
     }
-    
+
     // Step 5: Helper functions
     function isRetryableError(error) {
       const retryableErrorTypes = [
@@ -398,42 +445,44 @@ export default {
         'Server Error',
         'Connection failed'
       ];
-      
-      return retryableErrorTypes.some(type => 
+
+      return retryableErrorTypes.some(type =>
         error.message.includes(type) || error.name === type
       );
     }
-    
+
     function scheduleRetry() {
-      if (retryTimer) {
+      if(retryTimer) {
         clearTimeout(retryTimer);
       }
-      
+
       retryCount.value++;
-      statusMessage.value = `Retrying in ${props.retryDelay / 1000} seconds... (${retryCount.value}/${props.retryAttempts})`;
-      
+      statusMessage.value =
+        'Retrying in ' + (props.retryDelay / 1000) + ' seconds... (' +
+        retryCount.value + '/' + props.retryAttempts + ')';
+
       retryTimer = setTimeout(() => {
         initializeLicense();
       }, props.retryDelay);
     }
-    
+
     function retryInitialization() {
-      if (retryTimer) {
+      if(retryTimer) {
         clearTimeout(retryTimer);
       }
       retryCount.value = 0;
       initializeLicense();
     }
-    
+
     function dismissError() {
       showError.value = false;
       lastError.value = null;
     }
-    
+
     function toggleDetails() {
       showDetails.value = !showDetails.value;
     }
-    
+
     // Step 6: Display helper functions
     function getStatusIcon() {
       const icons = {
@@ -445,7 +494,7 @@ export default {
       };
       return icons[status.value] || '❓';
     }
-    
+
     function getStatusLabel() {
       const labels = {
         uninitialized: 'Not Initialized',
@@ -456,70 +505,75 @@ export default {
       };
       return labels[status.value] || 'Unknown';
     }
-    
+
     function getErrorMessage(error) {
-      if (!error) return '';
-      
-      // Common error translations
-      if (error.message.includes('network')) {
-        return 'Network connection failed. Please check your internet connection.';
+      if(!error) {
+        return '';
       }
-      if (error.message.includes('license')) {
+
+      // Common error translations
+      if(error.message.includes('network')) {
+        return 'Network connection failed. Please check your internet ' +
+          'connection.';
+      }
+      if(error.message.includes('license')) {
         return 'Invalid license key or expired license.';
       }
-      if (error.message.includes('server')) {
+      if(error.message.includes('server')) {
         return 'License server unavailable. Please try again later.';
       }
-      
+
       return error.message || 'An unknown error occurred.';
     }
-    
+
     function formatDate(date) {
-      if (!date) return '';
+      if(!date) {
+        return '';
+      }
       try {
         return new Date(date).toLocaleDateString();
-      } catch {
+      } catch{
         return date.toString();
       }
     }
-    
+
     // Step 7: Watchers
     watch(() => props.pdf417Config, () => {
-      if (props.autoInitialize && status.value === 'uninitialized') {
+      if(props.autoInitialize && status.value === 'uninitialized') {
         initializeLicense();
       }
-    }, { deep: true });
-    
+    }, {deep: true});
+
     // Step 8: Lifecycle
     onMounted(() => {
-      if (props.autoInitialize) {
+      if(props.autoInitialize) {
         initializeLicense();
       }
     });
-    
+
     // Cleanup
     const cleanup = () => {
-      if (retryTimer) {
+      if(retryTimer) {
         clearTimeout(retryTimer);
         retryTimer = null;
       }
     };
-    
+
     const beforeUnmount = () => {
       cleanup();
     };
-    
+
     // Step 9: Expose methods for parent components
     expose({
       initializeLicense,
       validateLicense,
       isInitialized: () => isInitialized.value,
       getStatus: () => status.value,
-      getLicenseInfo: () => ({ ...licenseInfo }),
+      getLicenseInfo: () => ({...licenseInfo}),
       retryInitialization,
       dismissError
     });
-    
+
     // Step 10: Return reactive state and methods for template
     return {
       status,
@@ -531,7 +585,7 @@ export default {
       isInitialized,
       statusClass,
       showDetails,
-      showError,
+      // showError,
       retryInitialization,
       validateLicense,
       dismissError,
@@ -551,7 +605,8 @@ export default {
 
 <style scoped>
 .license-manager-container {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
 }
 
 /* License Status */
@@ -785,32 +840,32 @@ export default {
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .license-actions {
     justify-content: stretch;
   }
-  
+
   .action-button {
     flex: 1;
     justify-content: center;
     min-width: 0;
   }
-  
+
   .detail-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
-  
+
   .detail-value {
     text-align: left;
   }
-  
+
   .error-content {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .error-dismiss {
     align-self: flex-end;
   }
@@ -823,32 +878,32 @@ export default {
     border-color: #404040;
     color: #e0e0e0;
   }
-  
+
   .status-label {
     color: #e0e0e0;
   }
-  
+
   .status-message {
     color: #b0b0b0;
   }
-  
+
   .license-details {
     background: rgba(0, 0, 0, 0.2);
   }
-  
+
   .detail-label {
     color: #b0b0b0;
   }
-  
+
   .detail-value {
     color: #e0e0e0;
   }
-  
+
   .license-error {
     background: #3d2a2e;
     border-color: #5a3d42;
   }
-  
+
   .error-title,
   .error-details,
   .error-dismiss {
@@ -862,7 +917,7 @@ export default {
   .license-error {
     border-width: 2px;
   }
-  
+
   .action-button {
     border-width: 2px;
   }
@@ -873,7 +928,7 @@ export default {
   .status-icon.status-initializing {
     animation: none;
   }
-  
+
   .action-button {
     transition: none;
   }

@@ -1,9 +1,8 @@
 <template>
-  <div 
+  <div
     ref="overlayContainer"
     class="region-overlay-container"
     :style="containerStyle">
-    
     <!-- Canvas Overlay for PDF417 Region Masking -->
     <canvas
       v-if="regionStyle !== 'none'"
@@ -11,16 +10,16 @@
       class="region-mask-canvas"
       :style="canvasStyle"
       @resize="handleResize" />
-    
+
     <!-- QR Box Overlay (CSS-based) -->
     <div
       v-if="showQrBox && regionStyle !== 'none'"
       class="qr-box-overlay"
       :style="qrBoxStyle">
-      <div class="qr-box-corner qr-box-corner--tl"></div>
-      <div class="qr-box-corner qr-box-corner--tr"></div>
-      <div class="qr-box-corner qr-box-corner--bl"></div>
-      <div class="qr-box-corner qr-box-corner--br"></div>
+      <div class="qr-box-corner qr-box-corner--tl" />
+      <div class="qr-box-corner qr-box-corner--tr" />
+      <div class="qr-box-corner qr-box-corner--bl" />
+      <div class="qr-box-corner qr-box-corner--br" />
     </div>
   </div>
 </template>
@@ -29,7 +28,7 @@
 /*!
  * Copyright (c) 2025 Digital Bazaar, Inc. All rights reserved.
  */
-import { nextTick } from 'vue';
+import {nextTick} from 'vue';
 
 export default {
   name: 'RegionOverlayComponent',
@@ -57,11 +56,11 @@ export default {
     regionStyle: {
       type: String,
       default: 'square', // 'square', 'rectangle', 'none'
-      validator: (value) => ['square', 'rectangle', 'none'].includes(value)
+      validator: value => ['square', 'rectangle', 'none'].includes(value)
     }
   },
   emits: [
-    'region-calculated'  // { region: Object }
+    'region-calculated' // { region: Object }
   ],
   data() {
     return {
@@ -74,27 +73,27 @@ export default {
   computed: {
     // Region mask edge length calculation (from existing logic)
     regionMaskEdgeLength() {
-      const regionMaskEdgeLength = 
+      const regionMaskEdgeLength =
         this.regionScale * Math.min(this.clientWidth, this.clientHeight);
       return Math.floor(regionMaskEdgeLength);
     },
 
     // Region left position (from existing logic)
     regionLeft() {
-      const left = 
+      const left =
         (this.clientWidth - this.regionMaskEdgeLength) / 2 / this.clientWidth;
       if(this.clientWidth > this.clientHeight) {
         // this creates a percentage
         return Math.round(left * 100) - 25;
       } else {
-        // this creates a percentage  
+        // this creates a percentage
         return Math.round(left * 100) - 20;
       }
     },
 
     // Region top position (from existing logic)
     regionTop() {
-      const top = 
+      const top =
         (this.clientHeight - this.regionMaskEdgeLength) / 2 / this.clientHeight;
       // this creates a percentage
       return Math.round(top * 100) - 5;
@@ -140,12 +139,14 @@ export default {
 
     // QR box positioning and styling
     qrBoxStyle() {
-      if(!this.showQrBox) return { display: 'none' };
-      
-      const { regionLeft, regionTop } = this.region;
+      if(!this.showQrBox) {
+        return {display: 'none'};
+      }
+
+      const {regionLeft, regionTop} = this.region;
       const regionWidth = 100 - (2 * Math.max(0, this.regionLeft));
       const regionHeight = 100 - (2 * Math.max(0, this.regionTop));
-      
+
       return {
         position: 'absolute',
         left: `${regionLeft}%`,
@@ -162,7 +163,7 @@ export default {
     // Watch for region changes and emit to parent
     region: {
       handler(newRegion) {
-        this.$emit('region-calculated', { region: newRegion });
+        this.$emit('region-calculated', {region: newRegion});
       },
       deep: true,
       immediate: true
@@ -197,14 +198,14 @@ export default {
     // Initialize canvas for region masking (from existing cvsDrawArea logic)
     async initializeCanvas() {
       await nextTick();
-      
+
       if(!this.$refs.maskCanvas) {
         return;
       }
 
       const canvas = this.$refs.maskCanvas;
       this.maskCanvasContext = canvas.getContext('2d');
-      
+
       // Set canvas size to match container
       canvas.width = this.clientWidth;
       canvas.height = this.clientHeight;
@@ -218,27 +219,29 @@ export default {
 
       const canvas = this.$refs.maskCanvas;
       const ctx = this.maskCanvasContext;
-      
+
       // Update canvas size
       canvas.width = this.clientWidth;
       canvas.height = this.clientHeight;
-      
+
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
+
       // Draw semi-transparent overlay
       ctx.fillStyle = 'rgba(0,0,0,.5)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
+
       // Cut out the scanning region
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fillStyle = 'white';
-      
+
       const regionLeftPx = (this.region.regionLeft / 100) * canvas.width;
       const regionTopPx = (this.region.regionTop / 100) * canvas.height;
-      const regionWidthPx = ((100 - 2 * Math.max(0, this.regionLeft)) / 100) * canvas.width;
-      const regionHeightPx = ((100 - 2 * Math.max(0, this.regionTop)) / 100) * canvas.height;
-      
+      const regionWidthPercent = 100 - 2 * Math.max(0, this.regionLeft);
+      const regionWidthPx = (regionWidthPercent / 100) * canvas.width;
+      const regionHeightPercent = 100 - 2 * Math.max(0, this.regionTop);
+      const regionHeightPx = (regionHeightPercent / 100) * canvas.height;
+
       // Draw clear region based on style
       if(this.regionStyle === 'square') {
         const size = Math.min(regionWidthPx, regionHeightPx);
@@ -248,19 +251,21 @@ export default {
       } else if(this.regionStyle === 'rectangle') {
         ctx.fillRect(regionLeftPx, regionTopPx, regionWidthPx, regionHeightPx);
       }
-      
+
       // Draw region border
       ctx.globalCompositeOperation = 'source-over';
       ctx.lineWidth = 2;
       ctx.strokeStyle = this.guideColor;
-      
+
       if(this.regionStyle === 'square') {
         const size = Math.min(regionWidthPx, regionHeightPx);
         const adjustedLeft = regionLeftPx + (regionWidthPx - size) / 2;
         const adjustedTop = regionTopPx + (regionHeightPx - size) / 2;
         ctx.strokeRect(adjustedLeft, adjustedTop, size, size);
       } else if(this.regionStyle === 'rectangle') {
-        ctx.strokeRect(regionLeftPx, regionTopPx, regionWidthPx, regionHeightPx);
+        ctx.strokeRect(
+          regionLeftPx, regionTopPx, regionWidthPx, regionHeightPx
+        );
       }
     },
 
@@ -273,7 +278,7 @@ export default {
       this.resizeObserver = new ResizeObserver(() => {
         this.handleResize();
       });
-      
+
       this.resizeObserver.observe(this.$refs.overlayContainer);
     },
 
