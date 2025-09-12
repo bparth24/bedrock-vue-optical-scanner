@@ -189,6 +189,14 @@ export default {
           errorType = 'scan_aborted';
         } else if (error.message?.includes('no results')) {
           errorType = 'no_results';
+          // Don't emit no_results as errors - this is normal behavior
+          console.log('No scan results found - normal in continuous mode');
+          emit('scan-complete', {
+            successful: false,
+            resultCount: 0
+          });
+
+          return []; // Exit without emitting error
         } else if (error.message?.includes('source')) {
           errorType = 'invalid_source';
         }

@@ -29,11 +29,11 @@ export {default as OpticalScannerComponent} from
   './OpticalScannerComponent.vue';
 
 // Convenience exports for common combinations
-export {
-  CameraVideoComponent as Camera,
-  CameraControlsComponent as CameraControls,
-  ScannerControlsComponent as ScannerControls,
-  UploadComponent as Upload,
-  ResultsDisplayComponent as Results,
-  OpticalScannerComponent as OpticalScanner
-} from './index.js';
+// export {
+//   CameraVideoComponent as Camera,
+//   CameraControlsComponent as CameraControls,
+//   ScannerControlsComponent as ScannerControls,
+//   UploadComponent as Upload,
+//   ResultsDisplayComponent as Results,
+//   OpticalScannerComponent as OpticalScanner
+// } from './index.js';
